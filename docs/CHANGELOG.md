@@ -1,6 +1,8 @@
 # Changelog
 
 ## Unreleased
+
+## v0.1.0 (2026-10-05)
 - #AVE-0005: encrypt, decrypt and toggle whole files from the Command Palette, Explorer menu and editor title
 - #AVE-0006: encrypt and decrypt single YAML values (cursor, selection or lightbulb), plus `Encrypt Values in File` and `Decrypt All Values in File`
 - #AVE-0012: status bar item, context keys, block highlighting and folding for vaulted files and `!vault` values
