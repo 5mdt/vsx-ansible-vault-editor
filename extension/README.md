@@ -1,10 +1,8 @@
-![Ansible Vault Editor logo](logo_x4.png)
-
 # Ansible Vault Editor
 
 Encrypt, decrypt and edit [Ansible Vault](https://docs.ansible.com/ansible/latest/vault_guide/index.html) files and inline `!vault` values without leaving the editor. Works in VS Code and VSCodium.
 
-![Demo: encrypt a value, peek at it, edit decrypted, the save guard, rekey workspace and a decrypted diff](media/demo.gif)
+![Demo: encrypt a value, peek at it, edit decrypted, the save guard, rekey workspace and a decrypted diff](https://github.com/5mdt/vsx-ansible-vault-editor/raw/HEAD/extension/media/demo.gif)
 
 ## Install
 

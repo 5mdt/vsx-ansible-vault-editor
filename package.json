@@ -9,18 +9,28 @@
   "license": "GPL-3.0-only",
   "repository": {
     "type": "git",
-    "url": "https://github.com/5mdt/ansible-vault-editor.git"
+    "url": "https://github.com/5mdt/vsx-ansible-vault-editor.git"
   },
   "bugs": {
-    "url": "https://github.com/5mdt/ansible-vault-editor/issues"
+    "url": "https://github.com/5mdt/vsx-ansible-vault-editor/issues"
   },
-  "homepage": "https://github.com/5mdt/ansible-vault-editor#readme",
+  "homepage": "https://github.com/5mdt/vsx-ansible-vault-editor#readme",
   "private": true,
   "engines": {
     "vscode": "^1.85.0"
   },
   "categories": [
     "Other"
+  ],
+  "keywords": [
+    "ansible",
+    "ansible-vault",
+    "vault",
+    "encrypt",
+    "decrypt",
+    "secrets",
+    "yaml",
+    "devops"
   ],
   "main": "./build/extension.js",
   "activationEvents": [
@@ -279,7 +289,7 @@
     "compile": "npm run lint && npm run bundle",
     "watch": "esbuild src/extension.ts src/textconv.ts --bundle --platform=node --format=cjs --external:vscode --sourcemap --outdir=build --watch",
     "lint": "tsc -p ./ --noEmit",
-    "package": "npm run bundle && vsce package --no-dependencies --readme-path extension/README.md --baseImagesUrl https://github.com/5mdt/ansible-vault-editor/raw/HEAD/extension --out build/",
+    "package": "npm run bundle && vsce package --no-dependencies --readme-path extension/README.md --baseImagesUrl https://github.com/5mdt/vsx-ansible-vault-editor/raw/HEAD/extension --out build/",
     "test:unit": "vitest run test/unit",
     "test:integration": "vitest run test/integration",
     "test:extension": "npm run compile && tsc -p tsconfig.test.json && vscode-test",
@@ -291,12 +301,12 @@
     "@types/vscode": "^1.85.0",
     "@vscode/test-cli": "^0.0.15",
     "@vscode/test-electron": "^3.1.0",
-    "@vscode/vsce": "^3.0.0",
+    "@vscode/vsce": "^4.0.0",
     "esbuild": "^0.28.2",
     "mocha": "^12.0.3",
     "ovsx": "^1.2.0",
     "playwright-core": "^1.63.0",
-    "typescript": "^5.4.0",
+    "typescript": "^7.0.2",
     "vitest": "^5.0.3"
   },
   "capabilities": {

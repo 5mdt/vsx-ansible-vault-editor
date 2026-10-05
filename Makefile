@@ -2,7 +2,7 @@
 
 VSIX = build/ansible-vault-editor.vsix
 BUMP ?= minor
-IMAGES_URL = https://github.com/5mdt/ansible-vault-editor/raw/HEAD/extension
+IMAGES_URL = https://github.com/5mdt/vsx-ansible-vault-editor/raw/HEAD/extension
 
 all: lint compile test-unit
 
