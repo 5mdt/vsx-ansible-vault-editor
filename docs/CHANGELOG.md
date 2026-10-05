@@ -1,6 +1,8 @@
 # Changelog
 
 ## Unreleased
+
+## v0.3.0 (2026-10-05)
 - #AVE-0011: save guard; saving a file that was vaulted when opened, matches `ansibleVault.mustEncryptGlobs` or carries a marker now asks to re-encrypt first (`ansibleVault.saveGuard`: `off`, `warn`, `block`)
 - #AVE-0013: transparent mode (`ansibleVault.transparent`); vaulted files and `!vault` values open decrypted and are encrypted again on save, with `# ansible-vault: encrypt` markers and the `Toggle Transparent Marker` command
 
