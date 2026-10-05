@@ -16,7 +16,8 @@ Press F5 in VS Code to launch the Extension Development Host. All commands are c
 ## Checks
 
 ```sh
-make ddd   # verify docs consistency
+make ddd       # verify docs consistency
+make roadmap   # what is next
 ```
 
 ## License

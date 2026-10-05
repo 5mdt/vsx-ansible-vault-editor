@@ -1,4 +1,4 @@
-.PHONY: all ddd install compile watch lint test test-unit test-integration test-extension package publish-vsce publish-ovsx clean
+.PHONY: all ddd roadmap install compile watch lint test test-unit test-integration test-extension package publish-vsce publish-ovsx clean
 
 VSIX = build/ansible-vault-editor.vsix
 
@@ -6,6 +6,9 @@ all: lint compile test-unit
 
 ddd:
 	./scripts/ddd/ddd check
+
+roadmap:
+	./scripts/ddd/ddd roadmap
 
 install:
 	npm install
