@@ -4,6 +4,7 @@
   "description": "Encrypt, decrypt and edit Ansible Vault files and inline !vault values.",
   "version": "0.2.0",
   "publisher": "5mdt",
+  "icon": "extension/logo_x4.png",
   "author": "Vladimir Budylnikov (@nett00n)",
   "license": "GPL-3.0-only",
   "repository": {
