@@ -14,7 +14,7 @@ jobs:
         with:
           go-version: "1.23"
       - run: go install github.com/Kunde21/markdownfmt/v3/cmd/markdownfmt@v3.1.0
-      - run: test -z "$(markdownfmt -l $(find . -name '*.md' -not -path './.git/*'))"
+      - run: test -z "$(markdownfmt -soft-wraps -l $(find . -name '*.md' -not -path './.git/*'))"
 
   yamlfmt:
     runs-on: ubuntu-latest

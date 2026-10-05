@@ -1,6 +1,8 @@
 # Changelog
 
 ## Unreleased
+
+## v1.0.0 (2026-10-05)
 - #AVE-0015: `Open Decrypted Changes` (SCM context menu, diff title, palette) shows a vaulted file's change as a plaintext diff held in memory; `Enable Decrypted git diff` makes `git diff` on the command line show plaintext too (`ansibleVault.diffGlobs`)
 
 ## v0.4.0 (2026-10-05)
