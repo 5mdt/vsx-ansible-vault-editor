@@ -25,6 +25,8 @@ As a developer, I want to choose between a built-in implementation and my instal
 ## Quirks & Decisions
 
 - Decision: no automatic fallback between backends, so a user who picked `cli` for compliance never gets native crypto unannounced.
+- Decision: rekey is decrypt with the old secret, then encrypt with the new one, in both backends. `ansible-vault rekey` only works in place on files, and callers hold text.
+- Decision: the `cli` backend streams plaintext and ciphertext over stdin/stdout (input `-`, `--output -`), so no plaintext touches disk.
 
 ## Testing
 
@@ -34,14 +36,16 @@ As a developer, I want to choose between a built-in implementation and my instal
 
 ### Unit
 
-- The same fixtures pass through both backends with equal results.
 - Temp secret file has mode 0600 and is deleted on success and on failure.
 - argv of the spawned process never contains the secret.
+- A missing executable surfaces as a distinct not-found error.
 
 ### Integration
 
+- The same fixtures pass through both backends with equal results.
 - With Ansible installed, `cli` output decrypts with `native` and the reverse.
+- `cli` rekey yields a vault that opens with only the new password.
 
 ## Status
 
-Planned
+Implemented

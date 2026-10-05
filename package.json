@@ -83,11 +83,10 @@
         "ansibleVault.backend": {
           "type": "string",
           "enum": [
-            "auto",
-            "cli",
-            "builtin"
+            "native",
+            "cli"
           ],
-          "default": "auto",
+          "default": "native",
           "description": "Crypto backend used for vault operations."
         },
         "ansibleVault.cliPath": {

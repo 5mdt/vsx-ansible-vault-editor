@@ -14,7 +14,6 @@
 
 1. AVE-0001 - format first; its tests are already red
 2. AVE-0002 - the `native` backend is AVE-0001, plus the `cli` fallback
-3. #BUG-0001 - CI goes green, so the tests run on every push
 
 **Done when:** native encrypt -> `ansible-vault decrypt` works, and the reverse, in CI.
 

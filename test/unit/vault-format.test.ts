@@ -216,6 +216,19 @@ describe("malformed envelopes", () => {
 });
 
 // AVE-0001
+describe("vault id validation", () => {
+  it.each(["a;b", "a b", "a\nb", "a\tb"])("rejects %j on encrypt", (id) => {
+    try {
+      encrypt("a", PASSWORD, { vaultId: id });
+      expect.unreachable();
+    } catch (e) {
+      expect(e).toBeInstanceOf(VaultFormatError);
+      expect((e as VaultFormatError).code).toBe("header");
+    }
+  });
+});
+
+// AVE-0001
 describe("line endings", () => {
   it("decrypts CRLF-wrapped ciphertext", () => {
     const fixture = readFileSync(join(fixtures, "multiline.vault"), "utf8");

@@ -35,6 +35,7 @@ flowchart LR
 ## Quirks & Decisions
 
 - Decision: only `AES256` is supported; any other cipher name is rejected with a clear error.
+- Decision: a vault ID containing `;` or whitespace is rejected on encrypt with a `header` format error, since it would corrupt the header line.
 
 ## Testing
 
@@ -52,4 +53,4 @@ flowchart LR
 
 ## Status
 
-Planned
+Implemented

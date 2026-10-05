@@ -4,8 +4,8 @@ Next free ID: **AVE-0015**.
 
 ## Available Features
 
-- [ ] [AVE-0001. Vault format](features/AVE-0001-vault-format.md) - `#crypto`
-- [ ] [AVE-0002. Crypto backends](features/AVE-0002-crypto-backends.md) - `#crypto` `#config`
+- [X] [AVE-0001. Vault format](features/AVE-0001-vault-format.md) - `#crypto`
+- [X] [AVE-0002. Crypto backends](features/AVE-0002-crypto-backends.md) - `#crypto` `#config`
 - [ ] [AVE-0003. Password resolution](features/AVE-0003-password-resolution.md) - `#secrets` `#config`
 - [ ] [AVE-0004. Vault IDs](features/AVE-0004-vault-ids.md) - `#secrets`
 - [ ] [AVE-0005. Encrypt and decrypt a file](features/AVE-0005-file-encrypt-decrypt.md) - `#file` `#ui`
