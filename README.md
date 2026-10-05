@@ -2,7 +2,19 @@
 
 VS Code / VSCodium extension for Ansible Vault: encrypt, decrypt and edit vaulted files and inline `!vault` values from the UI. Optional transparent mode decrypts on open and re-encrypts on save.
 
-**Status:** pre-release. Encrypt and decrypt files and inline `!vault` values, password lookup, vault IDs and the status bar work; peek (hover, CodeLens) and edit-decrypted work; rekey and transparent mode are still stubs. The contract lives in [docs/FRD.md](docs/FRD.md); the workflow is described in [docs/DOCS-DRIVEN-DEVELOPMENT.md](docs/DOCS-DRIVEN-DEVELOPMENT.md).
+**Status:** pre-release. Encrypt and decrypt files and inline `!vault` values, password lookup, vault IDs and the status bar work; peek (hover, CodeLens) and edit-decrypted work; save guard and transparent mode work; rekey is still a stub. The contract lives in [docs/FRD.md](docs/FRD.md); the workflow is described in [docs/DOCS-DRIVEN-DEVELOPMENT.md](docs/DOCS-DRIVEN-DEVELOPMENT.md).
+
+## Layout
+
+| Path                             | Holds                                                               |
+|----------------------------------|---------------------------------------------------------------------|
+| `src/vault/`                     | vault format and the `native` / `cli` crypto backends               |
+| `src/secrets/`                   | password lookup, keychain, vault ID selection                       |
+| `src/commands/`                  | encrypt, decrypt and toggle commands                                |
+| `src/inline/`                    | YAML value location and `!vault` block edits                        |
+| `src/peek/`, `src/edit/`         | hover and CodeLens, virtual decrypted documents                     |
+| `src/guard/`, `src/transparent/` | save guard, markers, transparent open and save                      |
+| `docs/`                          | feature docs, FRD, roadmap, UX references (docs-driven development) |
 
 ## Development
 
@@ -12,6 +24,11 @@ npm run compile   # output goes to build/
 ```
 
 Press F5 in VS Code to launch the Extension Development Host.
+
+```sh
+make test              # unit + integration (ansible-vault on PATH enables the interop tests)
+make test-extension    # tests inside a real VS Code host
+```
 
 ## Usage
 

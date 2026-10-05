@@ -1,6 +1,7 @@
 import * as path from "node:path";
 import * as vscode from "vscode";
 import { fileVaultId } from "../detect";
+import { toggleMarkerEdit } from "../transparent/markers";
 import { type DecryptedFs } from "../edit/provider";
 import { peekExcluded, type PeekArg } from "../peek/hover";
 import { peekTarget } from "../peek/peek";
@@ -16,7 +17,7 @@ import type { SecretResolver } from "../secrets/resolver";
 import { pickVaultId } from "../secrets";
 import { decryptWithSecrets } from "../secrets/vault-ids";
 import { getBackend, handleBackendError } from "../vault";
-import { eolOf, isYamlDocument } from "../vscode-util";
+import { applyEdits, eolOf, isYamlDocument, replaceWholeDocument } from "../vscode-util";
 import { fileDecrypt, fileEncrypt, planFile, type FileOp } from "./file-ops";
 import { prepareEncrypt, type OpsDeps } from "./session";
 
@@ -38,20 +39,6 @@ async function guarded(fn: () => Promise<void>): Promise<void> {
     const message = e instanceof Error ? e.message : String(e);
     void vscode.window.showErrorMessage(`Ansible Vault: ${message}`);
   }
-}
-
-function range(doc: vscode.TextDocument, edit: TextEdit): vscode.Range {
-  return new vscode.Range(doc.positionAt(edit.start), doc.positionAt(edit.end));
-}
-
-async function applyEdits(doc: vscode.TextDocument, edits: TextEdit[]): Promise<void> {
-  const we = new vscode.WorkspaceEdit();
-  for (const e of edits) we.replace(doc.uri, range(doc, e), e.newText);
-  await vscode.workspace.applyEdit(we);
-}
-
-async function replaceWholeDocument(doc: vscode.TextDocument, text: string): Promise<void> {
-  await applyEdits(doc, [{ start: 0, end: doc.getText().length, newText: text }]);
 }
 
 type Where =
@@ -238,10 +225,19 @@ async function peekCommand(resolver: SecretResolver, arg?: PeekArg): Promise<voi
   if (pick === "Copy") await vscode.env.clipboard.writeText(value);
 }
 
+// #AVE-0013
+async function toggleMarkerCommand(): Promise<void> {
+  const editor = activeEditor();
+  const doc = editor.document;
+  const edit = toggleMarkerEdit(doc.getText(), doc.offsetAt(editor.selection.active), eolOf(doc));
+  if (!edit) throw new RefusedError("no marker here");
+  await applyEdits(doc, [edit]);
+}
+
 const HOT_EXIT_WARNED = "ansibleVault.hotExitWarned";
 
 /** VS Code may back up unsaved edits of any document to disk; warn once (#AVE-0008). */
-function warnAboutHotExit(context: vscode.ExtensionContext): void {
+export function warnAboutHotExit(context: vscode.ExtensionContext): void {
   const hotExit = vscode.workspace.getConfiguration("files").get<string>("hotExit");
   if (hotExit === "off" || context.globalState.get(HOT_EXIT_WARNED)) return;
   void context.globalState.update(HOT_EXIT_WARNED, true);
@@ -283,7 +279,7 @@ async function editDecryptedCommand(
 }
 
 // AVE-0014: command IDs come from package.json so the two cannot drift apart.
-// #AVE-0003, #AVE-0005, #AVE-0006, #AVE-0007, #AVE-0008: the handlers below are real; the rest stay stubs.
+// #AVE-0003, #AVE-0005, #AVE-0006, #AVE-0007, #AVE-0008, #AVE-0013: the handlers below are real; the rest stay stubs.
 export function registerCommands(
   context: vscode.ExtensionContext,
   resolver: SecretResolver,
@@ -306,6 +302,7 @@ export function registerCommands(
     "ansibleVault.peek": (arg) => guarded(() => peekCommand(resolver, arg as PeekArg | undefined)),
     "ansibleVault.editDecrypted": (arg) =>
       guarded(() => editDecryptedCommand(context, editFs, arg as PeekArg | vscode.Uri | undefined)),
+    "ansibleVault.toggleMarker": () => guarded(toggleMarkerCommand),
     "ansibleVault.encryptAllInFile": () => guarded(() => encryptAllInFile(resolver)),
     "ansibleVault.decryptAllInFile": () => guarded(() => decryptAllInFile(resolver)),
   };

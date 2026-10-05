@@ -9,6 +9,8 @@ Encrypt, decrypt and edit [Ansible Vault](https://docs.ansible.com/ansible/lates
 - **Whole-file inline:** `Encrypt Values in File` lets you pick which values to encrypt; `Decrypt All Values in File` decrypts every block at once.
 - **Peek without changing anything:** hover a `!vault` block (or a vaulted file's first line) to see the value, with Copy and Edit decrypted links; a CodeLens above each block offers Show value and Copy value. Needs an already-known password; the hover never prompts.
 - **Edit decrypted:** `Ansible Vault: Edit Decrypted` opens the file, or the block under the cursor, in a normal tab. The plaintext lives only in memory; saving re-encrypts with the same vault ID and writes the source. If the file changed on disk meanwhile you choose Overwrite or Reload.
+- **Save guard:** saving a file that was vaulted when opened, or matches `ansibleVault.mustEncryptGlobs`, asks first: Re-encrypt and save, Save anyway or Cancel. Nothing is written until you answer.
+- **Transparent mode:** with `ansibleVault.transparent` on, vaulted files and `!vault` values open decrypted and are encrypted again on every save, so the disk only ever holds ciphertext. Decrypted items carry a `# ansible-vault: encrypt` marker (first line for a file, trailing comment for a value); type one by hand to vault something new.
 - **Status at a glance:** a status bar item shows `🔒 prod`, `🔒 vault` or `🔒 N inline`; `!vault` blocks are highlighted and foldable.
 - **Compatible:** produces and reads the exact `ansible-vault` format (1.1 and 1.2, AES256), including vault IDs. No Ansible install is needed unless you choose the CLI backend.
 
@@ -30,16 +32,37 @@ Password files may be executables (their output is the password). Executables ar
 
 With one known vault ID it is used silently; with several you pick one; with none, `ansibleVault.defaultVaultId` is used, else a plain 1.1 header is written. Decrypting tries the ID in the header first, then every other known secret.
 
+## Save guard and transparent mode
+
+A document is *guarded* when it was vaulted when you opened it and is now plaintext, when its path matches `ansibleVault.mustEncryptGlobs`, or when it carries a marker. Saving a guarded plaintext document asks: **Re-encrypt and save**, **Save anyway** or **Cancel** (`block` removes Save anyway; `off` saves as-is). Until you answer, the file on disk is left as it was.
+
+With `ansibleVault.transparent` on, a decrypted item carries a marker, and every marked item is encrypted again on save:
+
+```yaml
+# ansible-vault: encrypt id=prod        <- whole file, first line
+db_user: admin
+db_password: s3cret  # ansible-vault: encrypt   <- single value
+```
+
+- The vault ID is the one from the original header, else `id=` in the marker, else `ansibleVault.defaultVaultId`.
+- Values you did not change keep their exact ciphertext, so saving without edits leaves `git diff` empty.
+- No password on open: the file stays encrypted and you are offered "Enter password". No password on save: nothing is written.
+- `Ansible Vault: Toggle Transparent Marker` adds or removes a marker at the cursor. Markers count as "must encrypt" for the save guard even with transparent mode off.
+- The tab shows as modified after open and after each save, because the buffer holds plaintext. With `files.autoSave` on, the file is rewritten after every save; the bytes are identical, only the modification time changes.
+
 ## Settings
 
-| Setting                       | Default         | Meaning                                                                |
-|-------------------------------|-----------------|------------------------------------------------------------------------|
-| `ansibleVault.backend`        | `native`        | `native` (built in) or `cli` (your `ansible-vault`)                    |
-| `ansibleVault.cliPath`        | `ansible-vault` | executable used by the `cli` backend                                   |
-| `ansibleVault.passwordFile`   | empty           | password file or script, relative to the workspace root                |
-| `ansibleVault.hover.enabled`  | `true`          | show decrypted values on hover (CodeLens and Peek stay)                |
-| `ansibleVault.peekExclude`    | empty           | globs of files whose values are never shown by hover, CodeLens or Peek |
-| `ansibleVault.defaultVaultId` | empty           | vault ID used when none is known                                       |
+| Setting                         | Default         | Meaning                                                                                        |
+|---------------------------------|-----------------|------------------------------------------------------------------------------------------------|
+| `ansibleVault.backend`          | `native`        | `native` (built in) or `cli` (your `ansible-vault`)                                            |
+| `ansibleVault.cliPath`          | `ansible-vault` | executable used by the `cli` backend                                                           |
+| `ansibleVault.passwordFile`     | empty           | password file or script, relative to the workspace root                                        |
+| `ansibleVault.defaultVaultId`   | empty           | vault ID used when none is known                                                               |
+| `ansibleVault.hover.enabled`    | `true`          | show decrypted values on hover (CodeLens and Peek stay)                                        |
+| `ansibleVault.peekExclude`      | empty           | globs of files whose values are never shown by hover, CodeLens or Peek                         |
+| `ansibleVault.saveGuard`        | `warn`          | `off`, `warn` (ask) or `block` (ask, no Save anyway) when a secret would be saved in plaintext |
+| `ansibleVault.mustEncryptGlobs` | empty           | globs of files that must never be saved in plaintext                                           |
+| `ansibleVault.transparent`      | `false`         | decrypt on open, encrypt on save                                                               |
 
 If the `cli` backend is selected and the executable is missing, you are offered "Switch to native" or "Open settings"; there is no silent fallback.
 
@@ -57,11 +80,11 @@ The extension ships no default key bindings, to avoid clashing with other extens
 
 ## Keeping plaintext off disk
 
-Peek and Edit Decrypted keep plaintext in memory only. One caveat: VS Code's own hot exit can back up unsaved edits of any open document, including decrypted tabs, to its user-data folder. Set `files.hotExit` to `off` to avoid that; the extension warns once the first time you use Edit Decrypted.
+Peek and Edit Decrypted keep plaintext in memory only; transparent mode keeps it in the editor buffer, never in the saved file. One caveat: VS Code's own hot exit can back up unsaved edits of any open document, including decrypted tabs, to its user-data folder. Set `files.hotExit` to `off` to avoid that; the extension warns once the first time you use Edit Decrypted.
 
 ## Not yet available
 
-Rekey and transparent decrypt-on-open are planned and their commands are placeholders for now.
+Rekey is planned and its commands are placeholders for now.
 
 ## License
 

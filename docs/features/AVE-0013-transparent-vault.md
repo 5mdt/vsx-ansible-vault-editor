@@ -37,6 +37,11 @@ Marker syntax (the marker is buffer-only and stripped before writing):
 - No secret or failed encryption on save: the save is blocked. Plaintext is never written.
 - Markers count as "must encrypt" for the save guard even when `transparent` is off.
 
+- A value marker is the trailing comment on the line where the value starts (for a block scalar, the `|` header line).
+- An item whose plaintext is unchanged keeps its original ciphertext byte for byte, so a save without edits leaves `git diff` empty.
+- A newly typed marker is encrypted with a secret found without prompting (keychain, password file, env). None found: the save is held and a notification offers "Enter password".
+- `ansibleVault.toggleMarker` adds a marker to the value under the cursor (else the file's first line), or removes the marker there.
+
 ## UX
 
 See [vault-marker](../ux/modules/vault-marker.md), [save-guard-dialog](../ux/modules/save-guard-dialog.md).
@@ -45,6 +50,7 @@ See [vault-marker](../ux/modules/vault-marker.md), [save-guard-dialog](../ux/mod
 
 - Decision: the decrypted text lives in the normal editor buffer, not a FileSystemProvider overlay, so the file keeps its `file:` URI and works with git, linters and the Ansible language server. Quirk: the tab shows as modified right after open and after every save. Accepted.
 - Quirk: hot exit and auto-save backups can persist the plaintext buffer in VS Code's backup directory. Proposed: warn when `files.hotExit` is enabled and `transparent` is turned on.
+- Quirk: with `files.autoSave` on, the restored dirty buffer saves again; cached ciphertext keeps the bytes identical, only the mtime changes. A one-time warning is shown, and the existing hot-exit warning is reused.
 - Quirk: the SCM diff compares the ciphertext on disk with the plaintext buffer. Open: a decrypted diff view; tracked as a TODO.
 
 ## Testing
@@ -64,4 +70,4 @@ See [vault-marker](../ux/modules/vault-marker.md), [save-guard-dialog](../ux/mod
 
 ## Status
 
-Planned
+Implemented

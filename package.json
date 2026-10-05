@@ -125,6 +125,29 @@
           },
           "default": [],
           "description": "Glob patterns of files whose values are never shown by hover, CodeLens or Peek."
+        },
+        "ansibleVault.saveGuard": {
+          "type": "string",
+          "enum": [
+            "off",
+            "warn",
+            "block"
+          ],
+          "default": "warn",
+          "description": "What happens when a document that should be encrypted is about to be saved in plaintext: save as-is, ask (Re-encrypt and save / Save anyway / Cancel), or ask without Save anyway."
+        },
+        "ansibleVault.mustEncryptGlobs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [],
+          "description": "Glob patterns of files that must never be saved in plaintext."
+        },
+        "ansibleVault.transparent": {
+          "type": "boolean",
+          "default": false,
+          "description": "Decrypt vaulted files and values when opened and encrypt them again on save. Decrypted text then lives in the editor buffer, never on disk."
         }
       }
     },
@@ -173,6 +196,11 @@
           "command": "ansibleVault.editDecrypted",
           "when": "editorTextFocus && (ansibleVault.inVaultBlock || ansibleVault.fileIsVaulted)",
           "group": "1_modification@4"
+        },
+        {
+          "command": "ansibleVault.toggleMarker",
+          "when": "editorTextFocus && resourceLangId =~ /^(yaml|ansible)$/",
+          "group": "1_modification@5"
         }
       ]
     }

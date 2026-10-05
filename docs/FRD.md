@@ -14,9 +14,9 @@ Next free ID: **AVE-0015**.
 - [X] [AVE-0008. Edit decrypted](features/AVE-0008-edit-decrypted.md) - `#file` `#ui`
 - [ ] [AVE-0009. Rekey](features/AVE-0009-rekey.md) - `#rekey`
 - [ ] [AVE-0010. Rekey the whole workspace](features/AVE-0010-rekey-workspace.md) - `#rekey`
-- [ ] [AVE-0011. Save guard](features/AVE-0011-save-guard.md) - `#guard`
+- [X] [AVE-0011. Save guard](features/AVE-0011-save-guard.md) - `#guard`
 - [X] [AVE-0012. Detection and status](features/AVE-0012-detection-status.md) - `#ui`
-- [ ] [AVE-0013. Transparent decrypt and encrypt](features/AVE-0013-transparent-vault.md) - `#auto` `#file` `#inline` `#guard`
+- [X] [AVE-0013. Transparent decrypt and encrypt](features/AVE-0013-transparent-vault.md) - `#auto` `#file` `#inline` `#guard`
 - [X] [AVE-0014. Keybindings](features/AVE-0014-keybindings.md) - `#ui` `#keys`
 
 ## Deprecated

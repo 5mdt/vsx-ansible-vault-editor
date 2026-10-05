@@ -1,6 +1,7 @@
 // #AVE-0012: local detection of vaulted files and inline blocks; never needs a password.
 
 import { inlineTargets, type ValueTarget } from "./inline/yaml-values";
+import { parseMarkers } from "./transparent/markers";
 
 export interface VaultBlock {
   start: number;
@@ -47,7 +48,7 @@ export function blockAt(blocks: VaultBlock[], offset: number): VaultBlock | unde
 export interface DocumentState {
   fileIsVaulted: boolean;
   inVaultBlock: boolean;
-  /** Always false until transparent mode (#AVE-0013). */
+  /** The document carries an `ansible-vault: encrypt` marker (#AVE-0013). */
   hasMarker: boolean;
   /** Status bar text, undefined when nothing is vaulted. */
   status?: string;
@@ -65,10 +66,11 @@ export function describeDocument(text: string, offset: number): DocumentState {
     };
   }
   const blocks = findVaultBlocks(text);
+  const markers = parseMarkers(text);
   return {
     fileIsVaulted: false,
     inVaultBlock: blockAt(blocks, offset) !== undefined,
-    hasMarker: false,
+    hasMarker: !!markers.file || markers.values.length > 0,
     status: blocks.length ? `🔒 ${blocks.length} inline` : undefined,
   };
 }

@@ -1,5 +1,6 @@
 import * as vscode from "vscode";
-import { registerCommands } from "./commands";
+import { registerCommands, warnAboutHotExit } from "./commands";
+import { registerSaveGuard } from "./guard";
 import { DecryptedFs, SCHEME } from "./edit/provider";
 import { registerCodeActions } from "./inline/code-actions";
 import { createCodeLensProvider, createHoverProvider } from "./peek/hover";
@@ -26,6 +27,7 @@ export function activate(context: vscode.ExtensionContext): void {
   );
 
   registerCommands(context, resolver, editFs);
+  registerSaveGuard(context, resolver, () => warnAboutHotExit(context));
   registerStatus(context);
   registerCodeActions(context);
 }

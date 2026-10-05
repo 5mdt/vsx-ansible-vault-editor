@@ -1,6 +1,7 @@
 // #AVE-0012: status bar item, context keys, block decoration and folding.
 
 import * as vscode from "vscode";
+import { parseMarkers } from "../transparent/markers";
 import { describeDocument, fileVaultId, findVaultBlocks, type DocumentState } from "../detect";
 import { isYamlDocument, YAML_SELECTOR } from "../vscode-util";
 
@@ -19,7 +20,18 @@ export function registerStatus(context: vscode.ExtensionContext): void {
   const decoration = vscode.window.createTextEditorDecorationType({
     backgroundColor: "rgba(128, 128, 128, 0.12)",
   });
-  context.subscriptions.push(item, decoration);
+  const lock =
+    "data:image/svg+xml;utf8," +
+    encodeURIComponent(
+      '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path fill="#888" d="M5 7V5a3 3 0 016 0v2h1v7H4V7zm1.5 0h3V5a1.5 1.5 0 00-3 0z"/></svg>',
+    );
+  // #AVE-0013: marker comments are dimmed and get a lock in the gutter.
+  const markerDecoration = vscode.window.createTextEditorDecorationType({
+    opacity: "0.5",
+    gutterIconPath: vscode.Uri.parse(lock),
+    gutterIconSize: "contain",
+  });
+  context.subscriptions.push(item, decoration, markerDecoration);
 
   const setKeys = (s: DocumentState) => {
     void vscode.commands.executeCommand("setContext", "ansibleVault.fileIsVaulted", s.fileIsVaulted);
@@ -56,6 +68,14 @@ export function registerStatus(context: vscode.ExtensionContext): void {
           )
         : [],
     );
+    const markers = yaml ? parseMarkers(text) : { values: [] };
+    const ranges = markers.values.map(
+      (m) => new vscode.Range(doc.positionAt(m.commentStart), doc.positionAt(m.commentEnd)),
+    );
+    if ("file" in markers && markers.file) {
+      ranges.push(doc.lineAt(0).range);
+    }
+    editor.setDecorations(markerDecoration, ranges);
   };
 
   let timer: NodeJS.Timeout | undefined;
