@@ -22,11 +22,12 @@ db_password: !vault |
 
 | Target                     | Encrypt                                 | Decrypt                |
 |----------------------------|-----------------------------------------|------------------------|
-| Selection                  | selected text is the value              | n/a                    |
+| Selection                  | the scalar containing the selection     | n/a                    |
 | Cursor on a scalar         | that scalar                             | n/a                    |
 | Cursor in a `!vault` block | refused: "already encrypted"            | block becomes a scalar |
 | Command "all in file"      | every plain scalar chosen via QuickPick | every `!vault` block   |
 
+- "All in file" has its own commands: `ansibleVault.encryptAllInFile` (multi-select QuickPick of plain scalars, labelled by key path) and `ansibleVault.decryptAllInFile` (every `!vault` block). Each is a single edit, undone in one step.
 - The block is indented two spaces deeper than its key; list items (`- !vault |`) are handled the same way.
 - Multiline selections encrypt as one value with the newline preserved.
 - Decrypt emits a plain scalar when safe, otherwise a quoted or block scalar so YAML round-trips the exact text.
@@ -35,6 +36,8 @@ db_password: !vault |
 
 ## Quirks & Decisions
 
+- Decision: a selection must lie inside one scalar; that whole scalar is encrypted, so a partial selection never drops the rest of the value. A selection spanning several nodes is refused.
+- Decision: decrypt emits the first form that round-trips through the YAML parser to the exact text: plain, then (multi-line text only) literal block (`|`, `|-`, `|+`), then double-quoted.
 - Decision: values are located with a YAML-aware parser that keeps ranges, not regexes, so comments and anchors survive.
 
 ## Testing
@@ -55,4 +58,4 @@ db_password: !vault |
 
 ## Status
 
-Planned
+Implemented

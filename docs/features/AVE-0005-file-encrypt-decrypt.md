@@ -16,6 +16,7 @@ As a developer, I want to encrypt or decrypt a whole file from the editor or the
 
 - Available from the Command Palette, the Explorer context menu (multi-select supported) and the editor title.
 - The edit is applied as a WorkspaceEdit on the open document, so undo restores the previous text. Closed files in a multi-select are written directly.
+- The editor-title button is `toggleFile`; Explorer menu entries appear for every file.
 - Secret and vault ID follow [AVE-0003](AVE-0003-password-resolution.md) and [AVE-0004](AVE-0004-vault-ids.md).
 - A failed item in a multi-select is reported at the end; the others are kept.
 
@@ -35,4 +36,4 @@ As a developer, I want to encrypt or decrypt a whole file from the editor or the
 
 ## Status
 
-Planned
+Implemented

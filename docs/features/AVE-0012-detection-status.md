@@ -22,7 +22,8 @@ As a developer, I want to see at a glance whether a file or value is vaulted, so
 - Clicking the item runs the toggle command for the file or the nearest block.
 - Context keys published for `when` clauses: `ansibleVault.fileIsVaulted`, `ansibleVault.inVaultBlock`, `ansibleVault.hasMarker`.
 - `!vault` blocks are decorated with a subtle background and are foldable.
-- Detection is local text scanning and never needs a password.
+- Detection is local scanning and never needs a password. Blocks are found by the YAML parser, so a header inside a comment or a plain string is not a block.
+- `ansibleVault.hasMarker` is published as `false`, and `🔓 marked` is never shown, until [AVE-0013](AVE-0013-transparent-vault.md) lands.
 
 ## UX
 
@@ -41,4 +42,4 @@ See [status-item](../ux/modules/status-item.md).
 
 ## Status
 
-Planned
+Implemented

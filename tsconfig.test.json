@@ -3,7 +3,14 @@
   "compilerOptions": {
     "rootDir": ".",
     "outDir": "build/test",
-    "types": ["mocha", "node", "vscode"]
+    "types": [
+      "mocha",
+      "node",
+      "vscode"
+    ]
   },
-  "include": ["test/extension", "src"]
+  "include": [
+    "test/extension",
+    "src"
+  ]
 }

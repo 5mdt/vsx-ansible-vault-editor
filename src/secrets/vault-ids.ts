@@ -85,3 +85,16 @@ export async function decryptWithSecrets(
     }
   }
 }
+
+/** The secret to encrypt with: configured first, else prompt. Remembered right away if asked. */
+// #AVE-0004
+export async function secretForEncrypt(
+  resolver: SecretResolver,
+  vaultId: string,
+): Promise<string | undefined> {
+  const [first] = await resolver.candidates(vaultId);
+  if (first !== undefined) return first;
+  const typed = await resolver.promptFor(vaultId, false);
+  if (typed !== undefined) await resolver.confirm(vaultId, typed);
+  return typed;
+}

@@ -8,16 +8,16 @@ Next free ID: **AVE-0015**.
 - [X] [AVE-0002. Crypto backends](features/AVE-0002-crypto-backends.md) - `#crypto` `#config`
 - [X] [AVE-0003. Password resolution](features/AVE-0003-password-resolution.md) - `#secrets` `#config`
 - [X] [AVE-0004. Vault IDs](features/AVE-0004-vault-ids.md) - `#secrets`
-- [ ] [AVE-0005. Encrypt and decrypt a file](features/AVE-0005-file-encrypt-decrypt.md) - `#file` `#ui`
-- [ ] [AVE-0006. Inline variable encrypt and decrypt](features/AVE-0006-inline-variable.md) - `#inline` `#ui`
+- [X] [AVE-0005. Encrypt and decrypt a file](features/AVE-0005-file-encrypt-decrypt.md) - `#file` `#ui`
+- [X] [AVE-0006. Inline variable encrypt and decrypt](features/AVE-0006-inline-variable.md) - `#inline` `#ui`
 - [ ] [AVE-0007. Peek at decrypted values](features/AVE-0007-peek-decrypted.md) - `#inline` `#ui`
 - [ ] [AVE-0008. Edit decrypted](features/AVE-0008-edit-decrypted.md) - `#file` `#ui`
 - [ ] [AVE-0009. Rekey](features/AVE-0009-rekey.md) - `#rekey`
 - [ ] [AVE-0010. Rekey the whole workspace](features/AVE-0010-rekey-workspace.md) - `#rekey`
 - [ ] [AVE-0011. Save guard](features/AVE-0011-save-guard.md) - `#guard`
-- [ ] [AVE-0012. Detection and status](features/AVE-0012-detection-status.md) - `#ui`
+- [X] [AVE-0012. Detection and status](features/AVE-0012-detection-status.md) - `#ui`
 - [ ] [AVE-0013. Transparent decrypt and encrypt](features/AVE-0013-transparent-vault.md) - `#auto` `#file` `#inline` `#guard`
-- [ ] [AVE-0014. Keybindings](features/AVE-0014-keybindings.md) - `#ui` `#keys`
+- [X] [AVE-0014. Keybindings](features/AVE-0014-keybindings.md) - `#ui` `#keys`
 
 ## Deprecated
 

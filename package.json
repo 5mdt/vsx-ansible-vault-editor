@@ -50,7 +50,16 @@
       },
       {
         "command": "ansibleVault.toggleFile",
-        "title": "Ansible Vault: Toggle Encrypt/Decrypt File"
+        "title": "Ansible Vault: Toggle Encrypt/Decrypt File",
+        "icon": "$(lock)"
+      },
+      {
+        "command": "ansibleVault.encryptAllInFile",
+        "title": "Ansible Vault: Encrypt Values in File"
+      },
+      {
+        "command": "ansibleVault.decryptAllInFile",
+        "title": "Ansible Vault: Decrypt All Values in File"
       },
       {
         "command": "ansibleVault.peek",
@@ -105,16 +114,55 @@
           "description": "Path to a vault password file or executable, relative to the workspace root. Overrides ANSIBLE_VAULT_PASSWORD_FILE and ansible.cfg."
         }
       }
+    },
+    "menus": {
+      "explorer/context": [
+        {
+          "command": "ansibleVault.encryptFile",
+          "when": "!explorerResourceIsFolder",
+          "group": "7_modification@0"
+        },
+        {
+          "command": "ansibleVault.decryptFile",
+          "when": "!explorerResourceIsFolder",
+          "group": "7_modification@1"
+        },
+        {
+          "command": "ansibleVault.toggleFile",
+          "when": "!explorerResourceIsFolder",
+          "group": "7_modification@2"
+        }
+      ],
+      "editor/title": [
+        {
+          "command": "ansibleVault.toggleFile",
+          "when": "ansibleVault.fileIsVaulted || resourceLangId =~ /^(yaml|ansible)$/",
+          "group": "navigation"
+        }
+      ],
+      "editor/context": [
+        {
+          "command": "ansibleVault.encrypt",
+          "when": "editorTextFocus && resourceLangId =~ /^(yaml|ansible)$/",
+          "group": "1_modification@1"
+        },
+        {
+          "command": "ansibleVault.decrypt",
+          "when": "editorTextFocus && resourceLangId =~ /^(yaml|ansible)$/",
+          "group": "1_modification@2"
+        }
+      ]
     }
   },
   "scripts": {
-    "compile": "tsc -p ./",
-    "watch": "tsc -watch -p ./",
+    "compile": "npm run lint && npm run bundle",
+    "watch": "esbuild src/extension.ts --bundle --platform=node --format=cjs --external:vscode --sourcemap --outfile=build/extension.js --watch",
     "lint": "tsc -p ./ --noEmit",
-    "package": "vsce package --out build/",
+    "package": "npm run bundle && vsce package --no-dependencies --readme-path extension/README.md --out build/",
     "test:unit": "vitest run test/unit",
     "test:integration": "vitest run test/integration",
-    "test:extension": "tsc -p ./ && tsc -p tsconfig.test.json && vscode-test"
+    "test:extension": "npm run compile && tsc -p tsconfig.test.json && vscode-test",
+    "bundle": "esbuild src/extension.ts --bundle --platform=node --format=cjs --external:vscode --sourcemap --outfile=build/extension.js"
   },
   "devDependencies": {
     "@types/mocha": "^10.0.10",
@@ -123,7 +171,9 @@
     "@vscode/test-cli": "^0.0.15",
     "@vscode/test-electron": "^3.1.0",
     "@vscode/vsce": "^3.0.0",
+    "esbuild": "^0.28.2",
     "mocha": "^12.0.3",
+    "ovsx": "^1.2.0",
     "typescript": "^5.4.0",
     "vitest": "^5.0.3"
   },
@@ -132,5 +182,8 @@
       "supported": "limited",
       "description": "Password scripts are not run in an untrusted workspace."
     }
+  },
+  "dependencies": {
+    "yaml": "^2.9.1"
   }
 }

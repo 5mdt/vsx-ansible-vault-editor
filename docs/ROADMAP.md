@@ -30,8 +30,6 @@
 2. AVE-0005 - whole-file encrypt and decrypt
 3. AVE-0006 - inline values
 4. AVE-0014 - command contract; the stubs already meet it, flips when the commands are real
-5. #BUG-0002 - bundle before shipping
-6. #BUG-0003 - publish to the Marketplace and Open VSX
 
 **Done when:** 0.1.0 is installable from Open VSX and the Marketplace.
 

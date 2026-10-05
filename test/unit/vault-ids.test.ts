@@ -6,6 +6,7 @@ import {
   chooseEncryptId,
   decryptWithSecrets,
   knownVaultIds,
+  secretForEncrypt,
 } from "../../src/secrets/vault-ids";
 import type { PromptFn } from "../../src/secrets/resolver";
 import { SecretResolver, type SecretStore } from "../../src/secrets/resolver";
@@ -163,5 +164,32 @@ describe("decrypt with secrets", () => {
     await expect(
       decryptWithSecrets(encrypt("x", "a", { vaultId: "prod" }), failing, resolver),
     ).rejects.toBe(boom);
+  });
+});
+
+// #AVE-0004
+describe("secret for encrypt", () => {
+  it("uses a configured candidate without prompting", async () => {
+    const { resolver } = make({ prod: "stored" }, async () => {
+      throw new Error("must not prompt");
+    });
+    expect(await secretForEncrypt(resolver, "prod")).toBe("stored");
+  });
+
+  it("prompts, and remembers right away when asked", async () => {
+    const { resolver, store } = make({}, async () => ({ secret: "typed", remember: true }));
+    expect(await secretForEncrypt(resolver, "prod")).toBe("typed");
+    expect(store.data.get("prod")).toBe("typed");
+  });
+
+  it("does not store when remember is off", async () => {
+    const { resolver, store } = make({}, async () => ({ secret: "typed", remember: false }));
+    expect(await secretForEncrypt(resolver, "prod")).toBe("typed");
+    expect(store.data.size).toBe(0);
+  });
+
+  it("cancelled prompt -> undefined", async () => {
+    const { resolver } = make({});
+    expect(await secretForEncrypt(resolver, "prod")).toBeUndefined();
   });
 });
