@@ -1,6 +1,8 @@
 # Changelog
 
 ## Unreleased
+
+## v0.2.0 (2026-10-05)
 - #AVE-0007: hover and CodeLens show the decrypted value of a `!vault` block or vaulted file without changing it; `Peek` shows or copies it; settings `ansibleVault.hover.enabled` and `ansibleVault.peekExclude`
 - #AVE-0008: `Edit Decrypted` opens a vaulted file or a single block in a normal tab whose plaintext lives only in memory; saving re-encrypts with the same vault ID
 
