@@ -1,22 +1,40 @@
+![Ansible Vault Editor logo](logo_x4.png)
+
 # Ansible Vault Editor
 
 Encrypt, decrypt and edit [Ansible Vault](https://docs.ansible.com/ansible/latest/vault_guide/index.html) files and inline `!vault` values without leaving the editor. Works in VS Code and VSCodium.
+
+![Demo: encrypt a value, peek at it, edit decrypted, the save guard, rekey workspace and a decrypted diff](media/demo.gif)
+
+## Install
+
+Search for **Ansible Vault Editor** in the Extensions view (VS Code Marketplace, or Open VSX for VSCodium), or install it from the command line:
+
+```sh
+code --install-extension 5mdt.ansible-vault-editor
+codium --install-extension 5mdt.ansible-vault-editor
+```
+
+## Requirements
+
+- VS Code or VSCodium 1.85 or newer.
+- Nothing else for the default `native` backend. `ansible-vault` is only needed if you select the `cli` backend, and `node` on the PATH only for the optional decrypted `git diff` driver.
 
 ## Features
 
 - **Whole files:** encrypt, decrypt or toggle a file from the Command Palette, the Explorer context menu (multi-select supported) or the editor title button. One undo step per file.
 - **Inline values:** put the cursor on a YAML value, or select inside one, and encrypt it to a `!vault |` block. Decrypt puts the plain value back. A lightbulb action appears on values and blocks.
 - **Whole-file inline:** `Encrypt Values in File` lets you pick which values to encrypt; `Decrypt All Values in File` decrypts every block at once.
-- **Peek without changing anything:** hover a `!vault` block (or a vaulted file's first line) to see the value, with Copy and Edit decrypted links; a CodeLens above each block offers Show value and Copy value. Needs an already-known password; the hover never prompts.
+- **Peek without changing anything:** `Peek Decrypted Value` or hover a `!vault` block (or a vaulted file's first line) to see the value, with Copy and Edit decrypted links; a CodeLens above each block offers Show value and Copy value. Needs an already-known password; the hover never prompts.
 - **Edit decrypted:** `Ansible Vault: Edit Decrypted` opens the file, or the block under the cursor, in a normal tab. The plaintext lives only in memory; saving re-encrypts with the same vault ID and writes the source. If the file changed on disk meanwhile you choose Overwrite or Reload.
 - **Save guard:** saving a file that was vaulted when opened, or matches `ansibleVault.mustEncryptGlobs`, asks first: Re-encrypt and save, Save anyway or Cancel. Nothing is written until you answer.
 - **Transparent mode:** with `ansibleVault.transparent` on, vaulted files and `!vault` values open decrypted and are encrypted again on every save, so the disk only ever holds ciphertext. Decrypted items carry a `# ansible-vault: encrypt` marker (first line for a file, trailing comment for a value); type one by hand to vault something new.
 - **Rekey:** `Rekey` re-encrypts a vaulted file, or the blocks in your selection, under a new password and a vault ID you pick. `Rekey Workspace` lists every vaulted file with its block count, lets you untick files or filter by vault ID, then rekeys them under a progress notification you can cancel. A file that cannot be opened with a known password is left untouched and reported.
-- **Decrypted diffs:** `Open Decrypted Changes` (right-click a changed file in Source Control, the diff tab title, or the Command Palette) opens a read-only plaintext diff held in memory. `Enable Decrypted git diff` also makes `git diff` and `git log -p` in a terminal show plaintext, through a git `textconv` driver written to the repository's local config only; it uses the password file or `ansible.cfg` (no keychain, no prompt, no password scripts), needs `node` on the PATH, and plaintext then appears in diff output.
+- **Decrypted diffs:** `Open Decrypted Changes` (right-click a changed file in Source Control, the diff tab title, or the Command Palette) opens a read-only plaintext diff held in memory. `Open Decrypted Staged Changes` does the same for staged changes. `Enable Decrypted git diff` (and `Disable Decrypted git diff` to undo it) also makes `git diff` and `git log -p` in a terminal show plaintext, through a git `textconv` driver written to the repository's local config only; it uses the password file or `ansible.cfg` (no keychain, no prompt, no password scripts), needs `node` on the PATH, and plaintext then appears in diff output.
 - **Status at a glance:** a status bar item shows `🔒 prod`, `🔒 vault` or `🔒 N inline`; `!vault` blocks are highlighted and foldable.
 - **Compatible:** produces and reads the exact `ansible-vault` format (1.1 and 1.2, AES256), including vault IDs. No Ansible install is needed unless you choose the CLI backend.
 
-In a YAML file the commands act on the value under the cursor, or inside the selection; otherwise on the whole file.
+In a YAML file the commands act on the value under the cursor, or inside the selection; otherwise on the whole file. Every command is listed in the Command Palette under `Ansible Vault:`.
 
 ## Passwords
 
@@ -85,6 +103,10 @@ The extension ships no default key bindings, to avoid clashing with other extens
 ## Keeping plaintext off disk
 
 Peek and Edit Decrypted keep plaintext in memory only; transparent mode keeps it in the editor buffer, never in the saved file. One caveat: VS Code's own hot exit can back up unsaved edits of any open document, including decrypted tabs, to its user-data folder. Set `files.hotExit` to `off` to avoid that; the extension warns once the first time you use Edit Decrypted.
+
+## Disclaimer
+
+This extension was developed with the assistance of large language models (LLMs). The code is reviewed and tested, but it handles secrets: review it yourself before relying on it, and keep backups of vaulted files.
 
 ## License
 

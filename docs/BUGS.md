@@ -1,6 +1,6 @@
 # Bugs & debt
 
-Next free ID: **BUG-0004**.
+Next free ID: **BUG-0006**.
 
 Each entry ends with a `[P#/D#]` marker:
 

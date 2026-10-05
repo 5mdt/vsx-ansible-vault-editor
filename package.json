@@ -279,7 +279,7 @@
     "compile": "npm run lint && npm run bundle",
     "watch": "esbuild src/extension.ts src/textconv.ts --bundle --platform=node --format=cjs --external:vscode --sourcemap --outdir=build --watch",
     "lint": "tsc -p ./ --noEmit",
-    "package": "npm run bundle && vsce package --no-dependencies --readme-path extension/README.md --out build/",
+    "package": "npm run bundle && vsce package --no-dependencies --readme-path extension/README.md --baseImagesUrl https://github.com/5mdt/ansible-vault-editor/raw/HEAD/extension --out build/",
     "test:unit": "vitest run test/unit",
     "test:integration": "vitest run test/integration",
     "test:extension": "npm run compile && tsc -p tsconfig.test.json && vscode-test",
@@ -295,6 +295,7 @@
     "esbuild": "^0.28.2",
     "mocha": "^12.0.3",
     "ovsx": "^1.2.0",
+    "playwright-core": "^1.63.0",
     "typescript": "^5.4.0",
     "vitest": "^5.0.3"
   },

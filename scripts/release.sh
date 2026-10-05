@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Cut a release: gate, bump package.json, move CHANGELOG "Unreleased" into a version section, commit, tag.
-# Usage: scripts/release.sh patch|minor|major
+# Cut a release: gate, regenerate the demo gif, bump package.json, move CHANGELOG "Unreleased" into a version section, commit, tag.
+# Usage: scripts/release.sh patch|minor|major   (SKIP_SCREENSHOTS=1 to keep the committed demo.gif)
 # Nothing is pushed. Pushing the v* tag runs .github/workflows/publish.yml (Marketplace + Open VSX).
 set -euo pipefail
 
@@ -38,6 +38,12 @@ npm run lint
 npm run test:unit
 AVE_REQUIRE_ANSIBLE=1 npm run test:integration
 
+# --- demo gif ---------------------------------------------------------------
+# Needs a display and ffmpeg; SKIP_SCREENSHOTS=1 keeps the committed demo.gif as is.
+if [ -z "${SKIP_SCREENSHOTS:-}" ]; then
+  make screenshots screenshots-publish
+fi
+
 # --- changelog and version --------------------------------------------------
 grep -qx '## Unreleased' "$changelog" || die "$changelog has no '## Unreleased' section"
 entries=$(awk '/^## /{s = ($0 == "## Unreleased"); next} s && /^- /{n++} END{print n+0}' "$changelog")
@@ -45,6 +51,7 @@ entries=$(awk '/^## /{s = ($0 == "## Unreleased"); next} s && /^- /{n++} END{pri
 
 files=("$changelog" package.json)
 [ ! -f package-lock.json ] || files+=(package-lock.json)
+[ -z "$(git status --porcelain extension/media)" ] || files+=(extension/media/demo.gif)
 trap 'echo "release: failed; undo with: git checkout ${files[*]}" >&2' ERR
 heading="## $next ($(date +%F))"
 tmp=$(mktemp)
