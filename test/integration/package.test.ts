@@ -29,11 +29,15 @@ describe("bundled extension", () => {
 
   it("ships the bundle and manifest", () => {
     expect(listed).toContain("build/extension.js");
+    expect(listed).toContain("build/textconv.js");
     expect(listed).toContain("package.json");
   });
 
-  it("ships only the bundle from build/, no stale tsc output", () => {
-    expect(listed.filter((f) => f.startsWith("build/"))).toEqual(["build/extension.js"]);
+  it("ships only the two bundles from build/, no stale tsc output", () => {
+    expect(listed.filter((f) => f.startsWith("build/")).sort()).toEqual([
+      "build/extension.js",
+      "build/textconv.js",
+    ]);
   });
 
   it("ships no sources, tests or node_modules", () => {

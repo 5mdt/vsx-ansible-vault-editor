@@ -56,6 +56,6 @@
 
 ## 7. Later
 
-1. #TODO-0001 - decrypted diff in the SCM view
+1. AVE-0015 - decrypted diff in the SCM view, command first, then the opt-in git driver
 
 **Done when:** a vaulted file's diff in the SCM view shows plaintext.

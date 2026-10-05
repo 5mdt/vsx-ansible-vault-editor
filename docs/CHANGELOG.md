@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased
+- #AVE-0015: `Open Decrypted Changes` (SCM context menu, diff title, palette) shows a vaulted file's change as a plaintext diff held in memory; `Enable Decrypted git diff` makes `git diff` on the command line show plaintext too (`ansibleVault.diffGlobs`)
 
 ## v0.4.0 (2026-10-05)
 - #AVE-0009: `Rekey` re-encrypts a vaulted file, or the `!vault` blocks in the selection, under a new password and vault ID; all or nothing, one undo step

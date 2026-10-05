@@ -11,6 +11,7 @@ The extension has no routed pages; every piece of UI is a module.
 - [rekey-preview](modules/rekey-preview.md)
 - [save-guard-dialog](modules/save-guard-dialog.md)
 - [vault-marker](modules/vault-marker.md)
+- [decrypted-diff](modules/decrypted-diff.md)
 
 ## Legend
 

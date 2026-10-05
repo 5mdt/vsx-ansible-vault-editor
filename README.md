@@ -2,7 +2,7 @@
 
 VS Code / VSCodium extension for Ansible Vault: encrypt, decrypt and edit vaulted files and inline `!vault` values from the UI. Optional transparent mode decrypts on open and re-encrypts on save.
 
-**Status:** pre-release. Encrypt and decrypt files and inline `!vault` values, password lookup, vault IDs and the status bar work; peek (hover, CodeLens) and edit-decrypted work; save guard and transparent mode work; rekey (file and workspace) works. The contract lives in [docs/FRD.md](docs/FRD.md); the workflow is described in [docs/DOCS-DRIVEN-DEVELOPMENT.md](docs/DOCS-DRIVEN-DEVELOPMENT.md).
+**Status:** pre-release. Encrypt and decrypt files and inline `!vault` values, password lookup, vault IDs and the status bar work; peek (hover, CodeLens) and edit-decrypted work; save guard and transparent mode work; rekey (file and workspace) works; decrypted diffs work. The contract lives in [docs/FRD.md](docs/FRD.md); the workflow is described in [docs/DOCS-DRIVEN-DEVELOPMENT.md](docs/DOCS-DRIVEN-DEVELOPMENT.md).
 
 ## Layout
 

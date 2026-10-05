@@ -85,6 +85,22 @@
       {
         "command": "ansibleVault.forgetPasswords",
         "title": "Ansible Vault: Forget Cached Passwords"
+      },
+      {
+        "command": "ansibleVault.openDecryptedStagedChanges",
+        "title": "Ansible Vault: Open Decrypted Staged Changes"
+      },
+      {
+        "command": "ansibleVault.openDecryptedChanges",
+        "title": "Ansible Vault: Open Decrypted Changes"
+      },
+      {
+        "command": "ansibleVault.enableGitDiff",
+        "title": "Ansible Vault: Enable Decrypted git diff"
+      },
+      {
+        "command": "ansibleVault.disableGitDiff",
+        "title": "Ansible Vault: Disable Decrypted git diff"
       }
     ],
     "configuration": {
@@ -157,6 +173,18 @@
           },
           "default": [],
           "description": "Glob patterns of files that Rekey Workspace skips, in addition to files.exclude."
+        },
+        "ansibleVault.diffGlobs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [
+            "*.yml",
+            "*.yaml",
+            "*.vault"
+          ],
+          "description": "File patterns the decrypted git diff driver applies to (written to .git/info/attributes when enabled)."
         }
       }
     },
@@ -182,6 +210,11 @@
         {
           "command": "ansibleVault.toggleFile",
           "when": "ansibleVault.fileIsVaulted || resourceLangId =~ /^(yaml|ansible)$/",
+          "group": "navigation"
+        },
+        {
+          "command": "ansibleVault.openDecryptedChanges",
+          "when": "isInDiffEditor && ansibleVault.fileIsVaulted",
           "group": "navigation"
         }
       ],
@@ -215,19 +248,42 @@
           "command": "ansibleVault.rekey",
           "when": "editorTextFocus && (ansibleVault.inVaultBlock || ansibleVault.fileIsVaulted)",
           "group": "1_modification@6"
+        },
+        {
+          "command": "ansibleVault.openDecryptedChanges",
+          "when": "editorTextFocus && (ansibleVault.fileIsVaulted || ansibleVault.inVaultBlock) && scmProvider == git",
+          "group": "1_modification@7"
+        }
+      ],
+      "scm/resourceState/context": [
+        {
+          "command": "ansibleVault.openDecryptedChanges",
+          "when": "scmProvider == git && scmResourceGroup == workingTree",
+          "group": "7_modification"
+        },
+        {
+          "command": "ansibleVault.openDecryptedStagedChanges",
+          "when": "scmProvider == git && scmResourceGroup == index",
+          "group": "7_modification"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "ansibleVault.openDecryptedStagedChanges",
+          "when": "false"
         }
       ]
     }
   },
   "scripts": {
     "compile": "npm run lint && npm run bundle",
-    "watch": "esbuild src/extension.ts --bundle --platform=node --format=cjs --external:vscode --sourcemap --outfile=build/extension.js --watch",
+    "watch": "esbuild src/extension.ts src/textconv.ts --bundle --platform=node --format=cjs --external:vscode --sourcemap --outdir=build --watch",
     "lint": "tsc -p ./ --noEmit",
     "package": "npm run bundle && vsce package --no-dependencies --readme-path extension/README.md --out build/",
     "test:unit": "vitest run test/unit",
     "test:integration": "vitest run test/integration",
     "test:extension": "npm run compile && tsc -p tsconfig.test.json && vscode-test",
-    "bundle": "esbuild src/extension.ts --bundle --platform=node --format=cjs --external:vscode --sourcemap --outfile=build/extension.js"
+    "bundle": "esbuild src/extension.ts src/textconv.ts --bundle --platform=node --format=cjs --external:vscode --sourcemap --outdir=build"
   },
   "devDependencies": {
     "@types/mocha": "^10.0.10",

@@ -1,6 +1,6 @@
 # Feature Requirements Document
 
-Next free ID: **AVE-0015**.
+Next free ID: **AVE-0016**.
 
 ## Available Features
 
@@ -18,6 +18,7 @@ Next free ID: **AVE-0015**.
 - [X] [AVE-0012. Detection and status](features/AVE-0012-detection-status.md) - `#ui`
 - [X] [AVE-0013. Transparent decrypt and encrypt](features/AVE-0013-transparent-vault.md) - `#auto` `#file` `#inline` `#guard`
 - [X] [AVE-0014. Keybindings](features/AVE-0014-keybindings.md) - `#ui` `#keys`
+- [X] [AVE-0015. Decrypted diff](features/AVE-0015-decrypted-diff.md) - `#ui` `#file` `#inline`
 
 ## Deprecated
 
@@ -26,10 +27,10 @@ Next free ID: **AVE-0015**.
 - `#auto`: AVE-0013
 - `#config`: AVE-0002, AVE-0003
 - `#crypto`: AVE-0001, AVE-0002
-- `#file`: AVE-0005, AVE-0008, AVE-0013
+- `#file`: AVE-0005, AVE-0008, AVE-0013, AVE-0015
 - `#guard`: AVE-0011, AVE-0013
-- `#inline`: AVE-0006, AVE-0007, AVE-0013
+- `#inline`: AVE-0006, AVE-0007, AVE-0013, AVE-0015
 - `#keys`: AVE-0014
 - `#rekey`: AVE-0009, AVE-0010
 - `#secrets`: AVE-0003, AVE-0004
-- `#ui`: AVE-0005, AVE-0006, AVE-0007, AVE-0008, AVE-0012, AVE-0014
+- `#ui`: AVE-0005, AVE-0006, AVE-0007, AVE-0008, AVE-0012, AVE-0014, AVE-0015

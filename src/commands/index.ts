@@ -2,6 +2,7 @@ import * as path from "node:path";
 import * as vscode from "vscode";
 import { fileVaultId } from "../detect";
 import { toggleMarkerEdit } from "../transparent/markers";
+import type { DiffHandle } from "../diff";
 import type { GuardHandle } from "../guard";
 import { rekeyCommand, rekeyWorkspaceCommand } from "../rekey";
 import { type DecryptedFs } from "../edit/provider";
@@ -281,12 +282,13 @@ async function editDecryptedCommand(
 }
 
 // AVE-0014: command IDs come from package.json so the two cannot drift apart.
-// #AVE-0003, #AVE-0005, #AVE-0006, #AVE-0007, #AVE-0008, #AVE-0009, #AVE-0010, #AVE-0013: the handlers below are real; the rest stay stubs.
+// #AVE-0003, #AVE-0005, #AVE-0006, #AVE-0007, #AVE-0008, #AVE-0009, #AVE-0010, #AVE-0013, #AVE-0015: the handlers below are real; the rest stay stubs.
 export function registerCommands(
   context: vscode.ExtensionContext,
   resolver: SecretResolver,
   editFs: DecryptedFs,
   guard: GuardHandle,
+  diff: DiffHandle,
 ): void {
   const handlers: Record<string, (...args: unknown[]) => Promise<void> | void> = {
     "ansibleVault.forgetPasswords": async () => {
@@ -307,6 +309,10 @@ export function registerCommands(
       guarded(() => editDecryptedCommand(context, editFs, arg as PeekArg | vscode.Uri | undefined)),
     "ansibleVault.rekey": () => guarded(() => rekeyCommand(resolver, guard)),
     "ansibleVault.rekeyWorkspace": () => guarded(() => rekeyWorkspaceCommand(resolver, guard)),
+    "ansibleVault.openDecryptedChanges": (arg) => guarded(() => diff.open(arg, false)),
+    "ansibleVault.openDecryptedStagedChanges": (arg) => guarded(() => diff.open(arg, true)),
+    "ansibleVault.enableGitDiff": () => guarded(() => diff.enable()),
+    "ansibleVault.disableGitDiff": () => guarded(() => diff.disable()),
     "ansibleVault.toggleMarker": () => guarded(toggleMarkerCommand),
     "ansibleVault.encryptAllInFile": () => guarded(() => encryptAllInFile(resolver)),
     "ansibleVault.decryptAllInFile": () => guarded(() => decryptAllInFile(resolver)),

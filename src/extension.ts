@@ -1,5 +1,6 @@
 import * as vscode from "vscode";
 import { registerCommands, warnAboutHotExit } from "./commands";
+import { registerDiff } from "./diff";
 import { registerSaveGuard } from "./guard";
 import { DecryptedFs, SCHEME } from "./edit/provider";
 import { registerCodeActions } from "./inline/code-actions";
@@ -27,7 +28,8 @@ export function activate(context: vscode.ExtensionContext): void {
   );
 
   const guard = registerSaveGuard(context, resolver, () => warnAboutHotExit(context));
-  registerCommands(context, resolver, editFs, guard);
+  const diff = registerDiff(context, resolver);
+  registerCommands(context, resolver, editFs, guard, diff);
   registerStatus(context);
   registerCodeActions(context);
 }

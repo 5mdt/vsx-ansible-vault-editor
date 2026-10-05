@@ -51,7 +51,7 @@ See [vault-marker](../ux/modules/vault-marker.md), [save-guard-dialog](../ux/mod
 - Decision: the decrypted text lives in the normal editor buffer, not a FileSystemProvider overlay, so the file keeps its `file:` URI and works with git, linters and the Ansible language server. Quirk: the tab shows as modified right after open and after every save. Accepted.
 - Quirk: hot exit and auto-save backups can persist the plaintext buffer in VS Code's backup directory. Proposed: warn when `files.hotExit` is enabled and `transparent` is turned on.
 - Quirk: with `files.autoSave` on, the restored dirty buffer saves again; cached ciphertext keeps the bytes identical, only the mtime changes. A one-time warning is shown, and the existing hot-exit warning is reused.
-- Quirk: the SCM diff compares the ciphertext on disk with the plaintext buffer. Open: a decrypted diff view; tracked as a TODO.
+- Quirk: the SCM diff compares the ciphertext on disk with the plaintext buffer. Handled by [AVE-0015](AVE-0015-decrypted-diff.md): a command opens a decrypted diff.
 
 ## Testing
 

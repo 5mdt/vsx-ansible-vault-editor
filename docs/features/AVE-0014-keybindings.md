@@ -10,22 +10,26 @@ As a keyboard-driven developer, I want every vault action to be bindable to a ke
 
 The extension ships **no default key bindings**. Every command has a stable ID and is context-aware: with a selection or the cursor in a `!vault` block it acts on the inline value, otherwise on the file.
 
-| Command ID                      | Action                            | Feature                                                                               |
-|---------------------------------|-----------------------------------|---------------------------------------------------------------------------------------|
-| `ansibleVault.encrypt`          | encrypt selection / value / file  | [AVE-0005](AVE-0005-file-encrypt-decrypt.md), [AVE-0006](AVE-0006-inline-variable.md) |
-| `ansibleVault.decrypt`          | decrypt block / file              | AVE-0005, AVE-0006 (same links)                                                       |
-| `ansibleVault.toggle`           | encrypt or decrypt as appropriate | AVE-0005, AVE-0006 (same links)                                                       |
-| `ansibleVault.encryptFile`      | encrypt the whole file            | [AVE-0005](AVE-0005-file-encrypt-decrypt.md)                                          |
-| `ansibleVault.decryptFile`      | decrypt the whole file            | AVE-0005 (same link)                                                                  |
-| `ansibleVault.toggleFile`       | encrypt or decrypt the whole file | AVE-0005 (same link)                                                                  |
-| `ansibleVault.encryptAllInFile` | encrypt chosen plain values       | [AVE-0006](AVE-0006-inline-variable.md)                                               |
-| `ansibleVault.decryptAllInFile` | decrypt every `!vault` block      | AVE-0006 (same link)                                                                  |
-| `ansibleVault.peek`             | show / copy plaintext             | [AVE-0007](AVE-0007-peek-decrypted.md)                                                |
-| `ansibleVault.editDecrypted`    | open decrypted virtual document   | [AVE-0008](AVE-0008-edit-decrypted.md)                                                |
-| `ansibleVault.rekey`            | rekey file / selection            | [AVE-0009](AVE-0009-rekey.md)                                                         |
-| `ansibleVault.rekeyWorkspace`   | rekey the workspace               | [AVE-0010](AVE-0010-rekey-workspace.md)                                               |
-| `ansibleVault.toggleMarker`     | toggle `# ansible-vault: encrypt` | [AVE-0013](AVE-0013-transparent-vault.md)                                             |
-| `ansibleVault.forgetPasswords`  | clear remembered passwords        | [AVE-0003](AVE-0003-password-resolution.md)                                           |
+| Command ID                                | Action                            | Feature                                                                               |
+|-------------------------------------------|-----------------------------------|---------------------------------------------------------------------------------------|
+| `ansibleVault.encrypt`                    | encrypt selection / value / file  | [AVE-0005](AVE-0005-file-encrypt-decrypt.md), [AVE-0006](AVE-0006-inline-variable.md) |
+| `ansibleVault.decrypt`                    | decrypt block / file              | AVE-0005, AVE-0006 (same links)                                                       |
+| `ansibleVault.toggle`                     | encrypt or decrypt as appropriate | AVE-0005, AVE-0006 (same links)                                                       |
+| `ansibleVault.encryptFile`                | encrypt the whole file            | [AVE-0005](AVE-0005-file-encrypt-decrypt.md)                                          |
+| `ansibleVault.decryptFile`                | decrypt the whole file            | AVE-0005 (same link)                                                                  |
+| `ansibleVault.toggleFile`                 | encrypt or decrypt the whole file | AVE-0005 (same link)                                                                  |
+| `ansibleVault.encryptAllInFile`           | encrypt chosen plain values       | [AVE-0006](AVE-0006-inline-variable.md)                                               |
+| `ansibleVault.decryptAllInFile`           | decrypt every `!vault` block      | AVE-0006 (same link)                                                                  |
+| `ansibleVault.peek`                       | show / copy plaintext             | [AVE-0007](AVE-0007-peek-decrypted.md)                                                |
+| `ansibleVault.editDecrypted`              | open decrypted virtual document   | [AVE-0008](AVE-0008-edit-decrypted.md)                                                |
+| `ansibleVault.rekey`                      | rekey file / selection            | [AVE-0009](AVE-0009-rekey.md)                                                         |
+| `ansibleVault.rekeyWorkspace`             | rekey the workspace               | [AVE-0010](AVE-0010-rekey-workspace.md)                                               |
+| `ansibleVault.openDecryptedChanges`       | open a decrypted diff of the file | [AVE-0015](AVE-0015-decrypted-diff.md)                                                |
+| `ansibleVault.openDecryptedStagedChanges` | open a decrypted staged diff      | [AVE-0015](AVE-0015-decrypted-diff.md)                                                |
+| `ansibleVault.enableGitDiff`              | decrypt in `git diff` (opt-in)    | [AVE-0015](AVE-0015-decrypted-diff.md)                                                |
+| `ansibleVault.disableGitDiff`             | stop decrypting in `git diff`     | [AVE-0015](AVE-0015-decrypted-diff.md)                                                |
+| `ansibleVault.toggleMarker`               | toggle `# ansible-vault: encrypt` | [AVE-0013](AVE-0013-transparent-vault.md)                                             |
+| `ansibleVault.forgetPasswords`            | clear remembered passwords        | [AVE-0003](AVE-0003-password-resolution.md)                                           |
 
 Context awareness, in a YAML document: with a selection inside one scalar, or the cursor on a plain scalar value, `encrypt` and `toggle` act on that value; with the cursor in a `!vault` block, `decrypt` and `toggle` act on the block; otherwise they act on the whole file. `decrypt` with nothing vaulted under the cursor or in the file is refused with "nothing to decrypt here". `peek` and `editDecrypted` act on the block under the cursor, otherwise on the vaulted file, otherwise refuse the same way.
 

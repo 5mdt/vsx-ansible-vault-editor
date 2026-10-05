@@ -12,6 +12,7 @@ Encrypt, decrypt and edit [Ansible Vault](https://docs.ansible.com/ansible/lates
 - **Save guard:** saving a file that was vaulted when opened, or matches `ansibleVault.mustEncryptGlobs`, asks first: Re-encrypt and save, Save anyway or Cancel. Nothing is written until you answer.
 - **Transparent mode:** with `ansibleVault.transparent` on, vaulted files and `!vault` values open decrypted and are encrypted again on every save, so the disk only ever holds ciphertext. Decrypted items carry a `# ansible-vault: encrypt` marker (first line for a file, trailing comment for a value); type one by hand to vault something new.
 - **Rekey:** `Rekey` re-encrypts a vaulted file, or the blocks in your selection, under a new password and a vault ID you pick. `Rekey Workspace` lists every vaulted file with its block count, lets you untick files or filter by vault ID, then rekeys them under a progress notification you can cancel. A file that cannot be opened with a known password is left untouched and reported.
+- **Decrypted diffs:** `Open Decrypted Changes` (right-click a changed file in Source Control, the diff tab title, or the Command Palette) opens a read-only plaintext diff held in memory. `Enable Decrypted git diff` also makes `git diff` and `git log -p` in a terminal show plaintext, through a git `textconv` driver written to the repository's local config only; it uses the password file or `ansible.cfg` (no keychain, no prompt, no password scripts), needs `node` on the PATH, and plaintext then appears in diff output.
 - **Status at a glance:** a status bar item shows `🔒 prod`, `🔒 vault` or `🔒 N inline`; `!vault` blocks are highlighted and foldable.
 - **Compatible:** produces and reads the exact `ansible-vault` format (1.1 and 1.2, AES256), including vault IDs. No Ansible install is needed unless you choose the CLI backend.
 
@@ -53,18 +54,19 @@ db_password: s3cret  # ansible-vault: encrypt   <- single value
 
 ## Settings
 
-| Setting                         | Default         | Meaning                                                                                        |
-|---------------------------------|-----------------|------------------------------------------------------------------------------------------------|
-| `ansibleVault.backend`          | `native`        | `native` (built in) or `cli` (your `ansible-vault`)                                            |
-| `ansibleVault.cliPath`          | `ansible-vault` | executable used by the `cli` backend                                                           |
-| `ansibleVault.passwordFile`     | empty           | password file or script, relative to the workspace root                                        |
-| `ansibleVault.defaultVaultId`   | empty           | vault ID used when none is known                                                               |
-| `ansibleVault.hover.enabled`    | `true`          | show decrypted values on hover (CodeLens and Peek stay)                                        |
-| `ansibleVault.peekExclude`      | empty           | globs of files whose values are never shown by hover, CodeLens or Peek                         |
-| `ansibleVault.saveGuard`        | `warn`          | `off`, `warn` (ask) or `block` (ask, no Save anyway) when a secret would be saved in plaintext |
-| `ansibleVault.mustEncryptGlobs` | empty           | globs of files that must never be saved in plaintext                                           |
-| `ansibleVault.transparent`      | `false`         | decrypt on open, encrypt on save                                                               |
-| `ansibleVault.rekeyExclude`     | empty           | globs Rekey Workspace skips, in addition to `files.exclude`                                    |
+| Setting                         | Default                      | Meaning                                                                                        |
+|---------------------------------|------------------------------|------------------------------------------------------------------------------------------------|
+| `ansibleVault.backend`          | `native`                     | `native` (built in) or `cli` (your `ansible-vault`)                                            |
+| `ansibleVault.cliPath`          | `ansible-vault`              | executable used by the `cli` backend                                                           |
+| `ansibleVault.passwordFile`     | empty                        | password file or script, relative to the workspace root                                        |
+| `ansibleVault.defaultVaultId`   | empty                        | vault ID used when none is known                                                               |
+| `ansibleVault.hover.enabled`    | `true`                       | show decrypted values on hover (CodeLens and Peek stay)                                        |
+| `ansibleVault.peekExclude`      | empty                        | globs of files whose values are never shown by hover, CodeLens or Peek                         |
+| `ansibleVault.saveGuard`        | `warn`                       | `off`, `warn` (ask) or `block` (ask, no Save anyway) when a secret would be saved in plaintext |
+| `ansibleVault.mustEncryptGlobs` | empty                        | globs of files that must never be saved in plaintext                                           |
+| `ansibleVault.transparent`      | `false`                      | decrypt on open, encrypt on save                                                               |
+| `ansibleVault.rekeyExclude`     | empty                        | globs Rekey Workspace skips, in addition to `files.exclude`                                    |
+| `ansibleVault.diffGlobs`        | `*.yml`, `*.yaml`, `*.vault` | files the git diff driver applies to                                                           |
 
 If the `cli` backend is selected and the executable is missing, you are offered "Switch to native" or "Open settings"; there is no silent fallback.
 
