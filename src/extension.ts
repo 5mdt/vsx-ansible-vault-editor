@@ -26,8 +26,8 @@ export function activate(context: vscode.ExtensionContext): void {
     vscode.languages.registerCodeLensProvider(YAML_SELECTOR, createCodeLensProvider()),
   );
 
-  registerCommands(context, resolver, editFs);
-  registerSaveGuard(context, resolver, () => warnAboutHotExit(context));
+  const guard = registerSaveGuard(context, resolver, () => warnAboutHotExit(context));
+  registerCommands(context, resolver, editFs, guard);
   registerStatus(context);
   registerCodeActions(context);
 }

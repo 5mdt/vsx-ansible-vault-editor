@@ -24,6 +24,12 @@ flowchart TD
 - Runs under a progress notification with Cancel; cancelling applies nothing.
 - The new password and vault ID are chosen with [vault-id-picker](../ux/modules/vault-id-picker.md).
 
+- The old secret is asked for at most once per source vault ID that has no known secret, before the run; items that still cannot be decrypted make their file fail.
+- Filtering by vault ID rekeys only the items with that ID; other blocks in the same file are left alone.
+- `ansibleVault.rekeyExclude` is a list of globs added to `files.exclude`.
+- Open documents are changed in one WorkspaceEdit; closed files are written directly. On success the keychain entry of the target ID, if any, is updated to the new password.
+- Applied files are saved unless they had unsaved changes; those are rekeyed in the buffer, left unsaved and named in the report.
+
 ## UX
 
 See [rekey-preview](../ux/modules/rekey-preview.md), [vault-id-picker](../ux/modules/vault-id-picker.md).
@@ -48,4 +54,4 @@ See [rekey-preview](../ux/modules/rekey-preview.md), [vault-id-picker](../ux/mod
 
 ## Status
 
-Planned
+Implemented

@@ -1,6 +1,8 @@
 # Changelog
 
 ## Unreleased
+- #AVE-0009: `Rekey` re-encrypts a vaulted file, or the `!vault` blocks in the selection, under a new password and vault ID; all or nothing, one undo step
+- #AVE-0010: `Rekey Workspace` previews every vaulted file and block count, then rekeys the ticked ones; files that fail are listed and left untouched; setting `ansibleVault.rekeyExclude`
 
 ## v0.3.0 (2026-10-05)
 - #AVE-0011: save guard; saving a file that was vaulted when opened, matches `ansibleVault.mustEncryptGlobs` or carries a marker now asks to re-encrypt first (`ansibleVault.saveGuard`: `off`, `warn`, `block`)

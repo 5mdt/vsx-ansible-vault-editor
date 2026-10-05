@@ -166,6 +166,22 @@ export class SecretResolver {
     if (this.pending.get(vaultId) === secret) this.pending.delete(vaultId);
   }
 
+  /** A configured password file, env var or ansible.cfg entry supplies this ID. */
+  // #AVE-0009
+  hasSourceFor(vaultId: string): boolean {
+    return this.sources().some((s) => s.label === vaultId);
+  }
+
+  /** The ID was rekeyed: use the new secret from now on, in the keychain too if it was there and asked to. */
+  // #AVE-0009
+  async replace(vaultId: string, secret: string, updateKeychain = true): Promise<void> {
+    this.cache.set(vaultId, secret);
+    this.pending.delete(vaultId);
+    if (updateKeychain && (await this.deps.store.get(vaultId)) !== undefined) {
+      await this.deps.store.set(vaultId, secret);
+    }
+  }
+
   async forget(): Promise<void> {
     for (const id of await this.deps.store.ids()) {
       await this.deps.store.delete(id);

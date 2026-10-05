@@ -11,6 +11,7 @@ Encrypt, decrypt and edit [Ansible Vault](https://docs.ansible.com/ansible/lates
 - **Edit decrypted:** `Ansible Vault: Edit Decrypted` opens the file, or the block under the cursor, in a normal tab. The plaintext lives only in memory; saving re-encrypts with the same vault ID and writes the source. If the file changed on disk meanwhile you choose Overwrite or Reload.
 - **Save guard:** saving a file that was vaulted when opened, or matches `ansibleVault.mustEncryptGlobs`, asks first: Re-encrypt and save, Save anyway or Cancel. Nothing is written until you answer.
 - **Transparent mode:** with `ansibleVault.transparent` on, vaulted files and `!vault` values open decrypted and are encrypted again on every save, so the disk only ever holds ciphertext. Decrypted items carry a `# ansible-vault: encrypt` marker (first line for a file, trailing comment for a value); type one by hand to vault something new.
+- **Rekey:** `Rekey` re-encrypts a vaulted file, or the blocks in your selection, under a new password and a vault ID you pick. `Rekey Workspace` lists every vaulted file with its block count, lets you untick files or filter by vault ID, then rekeys them under a progress notification you can cancel. A file that cannot be opened with a known password is left untouched and reported.
 - **Status at a glance:** a status bar item shows `🔒 prod`, `🔒 vault` or `🔒 N inline`; `!vault` blocks are highlighted and foldable.
 - **Compatible:** produces and reads the exact `ansible-vault` format (1.1 and 1.2, AES256), including vault IDs. No Ansible install is needed unless you choose the CLI backend.
 
@@ -63,6 +64,7 @@ db_password: s3cret  # ansible-vault: encrypt   <- single value
 | `ansibleVault.saveGuard`        | `warn`          | `off`, `warn` (ask) or `block` (ask, no Save anyway) when a secret would be saved in plaintext |
 | `ansibleVault.mustEncryptGlobs` | empty           | globs of files that must never be saved in plaintext                                           |
 | `ansibleVault.transparent`      | `false`         | decrypt on open, encrypt on save                                                               |
+| `ansibleVault.rekeyExclude`     | empty           | globs Rekey Workspace skips, in addition to `files.exclude`                                    |
 
 If the `cli` backend is selected and the executable is missing, you are offered "Switch to native" or "Open settings"; there is no silent fallback.
 
@@ -81,10 +83,6 @@ The extension ships no default key bindings, to avoid clashing with other extens
 ## Keeping plaintext off disk
 
 Peek and Edit Decrypted keep plaintext in memory only; transparent mode keeps it in the editor buffer, never in the saved file. One caveat: VS Code's own hot exit can back up unsaved edits of any open document, including decrypted tabs, to its user-data folder. Set `files.hotExit` to `off` to avoid that; the extension warns once the first time you use Edit Decrypted.
-
-## Not yet available
-
-Rekey is planned and its commands are placeholders for now.
 
 ## License
 

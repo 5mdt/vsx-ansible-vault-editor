@@ -149,6 +149,14 @@
           "type": "boolean",
           "default": false,
           "description": "Decrypt vaulted files and values when opened and encrypt them again on save. Decrypted text then lives in the editor buffer, never on disk."
+        },
+        "ansibleVault.rekeyExclude": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [],
+          "description": "Glob patterns of files that Rekey Workspace skips, in addition to files.exclude."
         }
       }
     },
@@ -202,6 +210,11 @@
           "command": "ansibleVault.toggleMarker",
           "when": "editorTextFocus && resourceLangId =~ /^(yaml|ansible)$/",
           "group": "1_modification@5"
+        },
+        {
+          "command": "ansibleVault.rekey",
+          "when": "editorTextFocus && (ansibleVault.inVaultBlock || ansibleVault.fileIsVaulted)",
+          "group": "1_modification@6"
         }
       ]
     }

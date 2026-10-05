@@ -14,11 +14,12 @@
 
 ## States
 
-| State       | Looks like                       |
-|-------------|----------------------------------|
-| several IDs | list above, default pre-selected |
-| one ID      | skipped, ID used silently        |
-| none        | skipped, header without ID       |
+| State       | Looks like                           |
+|-------------|--------------------------------------|
+| several IDs | list above, default pre-selected     |
+| one ID      | skipped, ID used silently            |
+| none        | skipped, header without ID           |
+| rekey       | always shown, plus "New vault ID..." |
 
 ## Actions
 

@@ -14,6 +14,11 @@ As a developer rotating a password or moving a secret to another vault ID, I wan
 - All-or-nothing per document: every block is decrypted and re-encrypted in memory first; one failure aborts with no edit.
 - A single WorkspaceEdit applies the result, so undo reverts it.
 
+- Selection: a vaulted file is rekeyed whole. Otherwise the blocks touched by the selection (an empty selection is the cursor point); none touched means every block in the file.
+- The vault ID picker is always shown, even with zero or one known ID, with an extra "New vault ID..." entry.
+- On success the session cache holds the new password for the target ID; the keychain entry is left alone, since other files under that ID may still use the old one ([AVE-0010](AVE-0010-rekey-workspace.md) updates it). If a password file, environment variable or `ansible.cfg` supplies that ID, a warning says to update it.
+- A document open in transparent mode ([AVE-0013](AVE-0013-transparent-vault.md)) is rekeyed on disk and its cached ciphertext refreshed, so the next save does not write the old key back; its buffer stays plain.
+
 ## UX
 
 See [vault-id-picker](../ux/modules/vault-id-picker.md).
@@ -35,4 +40,4 @@ See [vault-id-picker](../ux/modules/vault-id-picker.md).
 
 ## Status
 
-Planned
+Implemented

@@ -110,3 +110,53 @@ export function createResolver(
     report: (m) => channel.appendLine(m),
   });
 }
+
+const NEW_ID = "New vault ID...";
+
+/** The vault ID to rekey to. `{}` means no ID; undefined means cancelled. Always asks. */
+// #AVE-0009
+export async function pickRekeyId(
+  known: string[],
+  defaultId: string | undefined,
+): Promise<{ vaultId?: string } | undefined> {
+  const items: vscode.QuickPickItem[] = [
+    ...known.map((id) => ({ label: id, description: id === defaultId ? "(default)" : "" })),
+    { label: NO_ID_LABEL },
+    { label: NEW_ID },
+  ];
+  const pick = await vscode.window.showQuickPick(
+    items.sort((a, b) => Number(b.description !== "") - Number(a.description !== "")),
+    { title: "Rekey to vault ID" },
+  );
+  if (!pick) return undefined;
+  if (pick.label === NO_ID_LABEL) return {};
+  if (pick.label !== NEW_ID) return { vaultId: pick.label };
+  const typed = await vscode.window.showInputBox({
+    title: "New vault ID",
+    validateInput: (v) => (/^\S+$/.test(v) && !v.includes(";") ? undefined : "no spaces or semicolons"),
+  });
+  return typed ? { vaultId: typed } : undefined;
+}
+
+/** The new password, asked twice; undefined when cancelled. */
+// #AVE-0009
+export async function promptNewPassword(vaultId: string): Promise<string | undefined> {
+  let mismatch = false;
+  for (;;) {
+    const first = await vscode.window.showInputBox({
+      title: `New vault password for "${vaultId}"`,
+      password: true,
+      validateInput: (v) => (v === "" ? "must not be empty" : undefined),
+    });
+    if (first === undefined) return undefined;
+    const second = await vscode.window.showInputBox({
+      title: "Repeat the new password",
+      password: true,
+      prompt: mismatch ? "The passwords did not match; try again" : undefined,
+    });
+    if (second === undefined) return undefined;
+    if (first === second) return first;
+    mismatch = true;
+    void vscode.window.showWarningMessage("Ansible Vault: the passwords do not match");
+  }
+}

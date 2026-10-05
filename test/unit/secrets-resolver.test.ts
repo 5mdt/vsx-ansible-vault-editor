@@ -277,3 +277,23 @@ describe("prompt, remember and forget", () => {
     expect(await r.candidates("x")).toEqual([]);
   });
 });
+
+// #AVE-0009
+describe("rekeyed secrets", () => {
+  it("replace updates the session and an existing keychain entry only", async () => {
+    await store.set("prod", "old");
+    const r = resolver();
+    await r.replace("prod", "new");
+    expect((await r.candidates("prod"))[0]).toBe("new");
+    expect(store.data.get("prod")).toBe("new");
+    await r.replace("dev", "fresh");
+    expect((await r.candidates("dev"))[0]).toBe("fresh");
+    expect(store.data.has("dev")).toBe(false);
+  });
+
+  it("knows when a configured source supplies an ID", () => {
+    file("pw", "x");
+    expect(resolver({ passwordFile: "pw" }).hasSourceFor("default")).toBe(true);
+    expect(resolver().hasSourceFor("prod")).toBe(false);
+  });
+});

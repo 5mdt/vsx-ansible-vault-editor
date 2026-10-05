@@ -32,6 +32,15 @@ interface DocState {
   /** Plaintext to put back once the save has written safe bytes. */
   restore?: string;
   held: boolean;
+  /** Rekeyed disk text to write on the next save instead of the buffer (#AVE-0009). */
+  override?: string;
+}
+
+export interface GuardHandle {
+  /** The buffer shows decrypted text of a file whose disk bytes are ciphertext. */
+  isTransparent(doc: vscode.TextDocument): boolean;
+  /** Writes rekeyed ciphertext through the document's own save, keeping unsaved edits. */
+  writeRekeyed(doc: vscode.TextDocument, diskText: string): Promise<void>;
 }
 
 function settings() {
@@ -53,7 +62,7 @@ export function registerSaveGuard(
   context: vscode.ExtensionContext,
   resolver: SecretResolver,
   onTransparentOpen: () => void,
-): void {
+): GuardHandle {
   const states = new Map<string, DocState>();
   const key = (doc: vscode.TextDocument) => doc.uri.toString();
   const tracked = (doc: vscode.TextDocument) => doc.uri.scheme === "file";
@@ -113,6 +122,12 @@ export function registerSaveGuard(
   /** The text to write instead of the buffer, or undefined to write the buffer as it is. */
   const safeText = async (doc: vscode.TextDocument, st: DocState): Promise<string | undefined> => {
     const text = doc.getText();
+    if (st.override !== undefined) {
+      const rekeyed = st.override;
+      st.override = undefined;
+      st.restore = text;
+      return rekeyed;
+    }
     const { mode, transparent, globs, defaultVaultId } = settings();
     let decision: "save" | "encrypt" | "dialog";
     const glob = globMatch(doc, globs);
@@ -218,4 +233,21 @@ export function registerSaveGuard(
     }),
   );
   for (const doc of vscode.workspace.textDocuments) void openTransparent(doc);
+
+  return {
+    isTransparent: (doc) => settings().transparent && (states.get(key(doc))?.cache.size ?? 0) > 0,
+    // #AVE-0009
+    async writeRekeyed(doc, diskText) {
+      const st = stateOf(doc);
+      st.snap = snapshot(diskText);
+      const dec = await decryptForBuffer(diskText, { backend: getBackend(), resolver }, eolOf(doc));
+      if (dec.state === "plain") st.cache = dec.cache;
+      if (!doc.isDirty) {
+        await vscode.workspace.fs.writeFile(doc.uri, Buffer.from(diskText, "utf8"));
+        return;
+      }
+      st.override = diskText;
+      await doc.save();
+    },
+  };
 }
