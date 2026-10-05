@@ -1,0 +1,70 @@
+---
+extends: default
+
+yaml-files:
+  - "*.yaml"
+  - "*.yml"
+
+rules:
+  # .yamlfmt sets max_line_length: 0 (unlimited) - keep yamllint consistent.
+  line-length: disable
+
+  # .yamlfmt's pad_line_comments: 1 requires exactly one space before comment
+  # text; enforce the same here instead of disabling the rule outright.
+  comments:
+    require-starting-space: true
+    min-spaces-from-content: 1
+
+  # Matches .yamlfmt: indent: 2, indentless_arrays: false (sequences are
+  # indented under their parent key).
+  indentation:
+    spaces: 2
+    indent-sequences: true
+    check-multi-line-strings: false
+
+  # .yamlfmt's include_document_start: true always adds "---", so enforce it.
+  document-start:
+    level: error
+
+  empty-lines:
+    max: 2
+    max-start: 0
+    max-end: 1
+
+  truthy:
+    allowed-values:
+      - "true"
+      - "false"
+
+  # .yamlfmt's trim_trailing_whitespace: false means the formatter will not
+  # remove trailing whitespace for you - lint for it instead.
+  trailing-spaces: enable
+
+  # Matches .yamlfmt's eof_newline: true.
+  new-line-at-end-of-file: enable
+
+  new-lines:
+    type: unix
+
+  brackets:
+    min-spaces-inside: 0
+    max-spaces-inside: 0
+
+  braces:
+    min-spaces-inside: 0
+    max-spaces-inside: 0
+
+  commas:
+    max-spaces-before: 0
+    max-spaces-after: 1
+
+  colons:
+    max-spaces-before: 0
+    max-spaces-after: 1
+
+  hyphens:
+    max-spaces-after: 1
+
+  octal-values:
+    forbid-implicit-octal: true
+    forbid-explicit-octal: true

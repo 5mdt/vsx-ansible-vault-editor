@@ -1,0 +1,80 @@
+---
+# .pre-commit-config.yaml (reused from url-fairy-bot)
+repos:
+  - hooks:
+      - id: trailing-whitespace
+        always_run: true
+      - id: end-of-file-fixer
+        always_run: true
+      - id: check-yaml
+        always_run: true
+      - id: check-added-large-files
+        always_run: true
+      - id: check-ast
+        always_run: true
+      - id: check-builtin-literals
+        always_run: true
+      - id: check-case-conflict
+        always_run: true
+      - id: check-docstring-first
+        always_run: true
+      - id: check-executables-have-shebangs
+        always_run: true
+      - id: check-json
+        always_run: true
+      - id: check-merge-conflict
+        always_run: true
+      - id: check-shebang-scripts-are-executable
+        always_run: true
+      - id: check-symlinks
+        always_run: true
+      - id: detect-private-key
+        always_run: true
+      - id: end-of-file-fixer
+        always_run: true
+      - id: fix-byte-order-marker
+        always_run: true
+      - id: mixed-line-ending
+        always_run: true
+      - id: pretty-format-json
+        always_run: true
+      - id: trailing-whitespace
+        always_run: true
+    repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+  - hooks:
+      - id: ruff-check
+        args:
+          - "--fix"
+        always_run: true
+      - id: ruff-format
+        always_run: true
+    repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.16.9
+  - hooks:
+      - id: yamlfmt
+        always_run: true
+    repo: https://github.com/google/yamlfmt
+    rev: v0.21.0
+  - repo: local
+    hooks:
+      - id: markdownfmt
+        name: markdownfmt
+        entry: scripts/markdownfmt
+        args:
+          - "-w"
+        language: golang
+        additional_dependencies:
+          - github.com/Kunde21/markdownfmt/v3/cmd/markdownfmt@v3.1.0
+        types:
+          - markdown
+        always_run: true
+      - id: check-utf8
+        name: check dubious utf8 symbols
+        entry: scripts/check-utf8
+        args:
+          - "--fix"
+        language: script
+        types:
+          - text
+        always_run: true
