@@ -1,0 +1,98 @@
+{
+  "name": "ansible-vault-editor",
+  "displayName": "Ansible Vault Editor",
+  "description": "Encrypt, decrypt and edit Ansible Vault files and inline !vault values.",
+  "version": "0.0.1",
+  "publisher": "5mdt",
+  "author": "Vladimir Budylnikov (@nett00n)",
+  "license": "GPL-3.0-only",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/5mdt/ansible-vault-editor.git"
+  },
+  "bugs": {
+    "url": "https://github.com/5mdt/ansible-vault-editor/issues"
+  },
+  "homepage": "https://github.com/5mdt/ansible-vault-editor#readme",
+  "private": true,
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "main": "./build/extension.js",
+  "activationEvents": [
+    "onLanguage:yaml",
+    "onLanguage:ansible"
+  ],
+  "contributes": {
+    "commands": [
+      {
+        "command": "ansibleVault.toggle",
+        "title": "Ansible Vault: Toggle Encrypt/Decrypt Selection"
+      },
+      {
+        "command": "ansibleVault.toggleFile",
+        "title": "Ansible Vault: Toggle Encrypt/Decrypt File"
+      },
+      {
+        "command": "ansibleVault.peek",
+        "title": "Ansible Vault: Peek Decrypted Value"
+      },
+      {
+        "command": "ansibleVault.editDecrypted",
+        "title": "Ansible Vault: Edit Decrypted Value"
+      },
+      {
+        "command": "ansibleVault.rekey",
+        "title": "Ansible Vault: Rekey"
+      },
+      {
+        "command": "ansibleVault.rekeyWorkspace",
+        "title": "Ansible Vault: Rekey Workspace"
+      },
+      {
+        "command": "ansibleVault.forgetPasswords",
+        "title": "Ansible Vault: Forget Cached Passwords"
+      }
+    ],
+    "configuration": {
+      "title": "Ansible Vault Editor",
+      "properties": {
+        "ansibleVault.backend": {
+          "type": "string",
+          "enum": [
+            "auto",
+            "cli",
+            "builtin"
+          ],
+          "default": "auto",
+          "description": "Crypto backend used for vault operations."
+        },
+        "ansibleVault.cliPath": {
+          "type": "string",
+          "default": "ansible-vault",
+          "description": "Path to the ansible-vault executable."
+        },
+        "ansibleVault.defaultVaultId": {
+          "type": "string",
+          "default": "",
+          "description": "Vault ID used when none is specified."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "lint": "tsc -p ./ --noEmit",
+    "package": "vsce package --out build/"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/vscode": "^1.85.0",
+    "@vscode/vsce": "^3.0.0",
+    "typescript": "^5.4.0"
+  }
+}
