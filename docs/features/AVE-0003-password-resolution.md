@@ -30,6 +30,16 @@ flowchart TD
 - The prompt has a "Remember in keychain" button. Remembering is chosen per vault ID, stored in SecretStorage keyed by workspace and vault ID.
 - Command "Forget cached passwords" clears the stored secrets and the stored remember choices.
 - Secrets are never logged and never written outside SecretStorage.
+- Setting `ansibleVault.passwordFile`: a path, relative to the workspace root, to a plain file or an executable. `~` expands.
+- Secret trimming matches Ansible: a plain file is stripped of all surrounding whitespace; a script's stdout is stripped of `\r\n` only. An empty secret counts as a failed source. A script named `*-client[.ext]` receives `--vault-id <label>`.
+- Relative paths in `ansible.cfg` resolve against the cfg file's directory; relative paths from the environment resolve against the workspace root.
+- Label matching: an unlabelled source (`passwordFile`, `vault_password_file`, or an identity entry without `@`) has the label `default` and is tried for any vault ID. A labelled `vault_identity_list` entry serves its own ID only. The source `prompt` means "go to the prompt".
+
+## Quirks & Decisions
+
+- Decision: in an untrusted workspace, executable sources (named by workspace settings or a workspace `ansible.cfg`) are not run. The skip is reported and the lookup continues, so opening a repo never runs its code. `package.json` declares `untrustedWorkspaces: limited`.
+- Decision: a secret entered at the prompt is stored only after it decrypted something (or right away on encrypt), so a typo is never remembered.
+- Decision: a secret that fails is dropped from the session cache and the prompt reopens in its "does not match" state.
 
 ## UX
 
@@ -53,4 +63,4 @@ See [password-prompt](../ux/modules/password-prompt.md).
 
 ## Status
 
-Planned
+Implemented

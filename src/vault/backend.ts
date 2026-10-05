@@ -4,7 +4,7 @@ import { spawn } from "node:child_process";
 import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { decrypt, encrypt, VaultFormatError } from "./format";
+import { decrypt, encrypt, VaultAuthError, VaultFormatError } from "./format";
 
 export interface BackendEncryptOptions {
   vaultId?: string;
@@ -150,7 +150,10 @@ export class CliBackend implements VaultBackend {
         }
         throw e;
       }
-      if (res.code !== 0) throw new CliError(res.code, res.stderr);
+      if (res.code !== 0) {
+        if (/Decryption failed/.test(res.stderr)) throw new VaultAuthError();
+        throw new CliError(res.code, res.stderr);
+      }
       return res.stdout;
     } finally {
       await rm(dir, { recursive: true, force: true });

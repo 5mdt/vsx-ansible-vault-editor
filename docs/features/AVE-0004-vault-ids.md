@@ -17,6 +17,7 @@ As a developer with separate dev and prod secrets, I want to pick and keep a vau
 | Decrypt, 1.1 header, or the ID's secret fails | try every known secret; first HMAC match wins          |
 
 - Known IDs come from `vault_identity_list`, the setting `ansibleVault.defaultVaultId`, and remembered keychain entries ([AVE-0003](AVE-0003-password-resolution.md)).
+- Escaping the picker or the prompt cancels the whole command. When every candidate fails and the prompt is cancelled, the error is "no secret matched".
 - The picker may be bypassed with the `id=` hint of a marker ([AVE-0013](AVE-0013-transparent-vault.md)).
 
 ## UX
@@ -40,4 +41,4 @@ See [vault-id-picker](../ux/modules/vault-id-picker.md).
 
 ## Status
 
-Planned
+Implemented

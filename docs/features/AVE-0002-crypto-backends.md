@@ -26,6 +26,7 @@ As a developer, I want to choose between a built-in implementation and my instal
 
 - Decision: no automatic fallback between backends, so a user who picked `cli` for compliance never gets native crypto unannounced.
 - Decision: rekey is decrypt with the old secret, then encrypt with the new one, in both backends. `ansible-vault rekey` only works in place on files, and callers hold text.
+- Decision: the `cli` backend maps ansible-vault's `Decryption failed` to the same "wrong password or corrupted vault" error as `native`, so the [AVE-0004](AVE-0004-vault-ids.md) fallback can tell a wrong secret from a crash.
 - Decision: the `cli` backend streams plaintext and ciphertext over stdin/stdout (input `-`, `--output -`), so no plaintext touches disk.
 
 ## Testing

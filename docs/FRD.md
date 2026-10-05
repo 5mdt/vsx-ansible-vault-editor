@@ -6,8 +6,8 @@ Next free ID: **AVE-0015**.
 
 - [X] [AVE-0001. Vault format](features/AVE-0001-vault-format.md) - `#crypto`
 - [X] [AVE-0002. Crypto backends](features/AVE-0002-crypto-backends.md) - `#crypto` `#config`
-- [ ] [AVE-0003. Password resolution](features/AVE-0003-password-resolution.md) - `#secrets` `#config`
-- [ ] [AVE-0004. Vault IDs](features/AVE-0004-vault-ids.md) - `#secrets`
+- [X] [AVE-0003. Password resolution](features/AVE-0003-password-resolution.md) - `#secrets` `#config`
+- [X] [AVE-0004. Vault IDs](features/AVE-0004-vault-ids.md) - `#secrets`
 - [ ] [AVE-0005. Encrypt and decrypt a file](features/AVE-0005-file-encrypt-decrypt.md) - `#file` `#ui`
 - [ ] [AVE-0006. Inline variable encrypt and decrypt](features/AVE-0006-inline-variable.md) - `#inline` `#ui`
 - [ ] [AVE-0007. Peek at decrypted values](features/AVE-0007-peek-decrypted.md) - `#inline` `#ui`

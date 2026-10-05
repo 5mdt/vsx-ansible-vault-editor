@@ -119,6 +119,20 @@ describe("cli backend secret handling", () => {
     expect(argv.join(" ")).not.toContain("plain-data");
   });
 
+  it("'Decryption failed' on stderr becomes VaultAuthError", async () => {
+    const { run } = recorder({
+      code: 1,
+      stdout: Buffer.alloc(0),
+      stderr: "[ERROR]: Decryption failed (no vault secrets were found that could decrypt).",
+    });
+    await expect(
+      new CliBackend("ansible-vault", run).decrypt(
+        "$ANSIBLE_VAULT;1.1;AES256\n00\n",
+        PASSWORD,
+      ),
+    ).rejects.toThrow(VaultAuthError);
+  });
+
   it("ENOENT becomes CliNotFoundError", async () => {
     const enoent = Object.assign(new Error("spawn"), { code: "ENOENT" });
     const run: Runner = async () => {
