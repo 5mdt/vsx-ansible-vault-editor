@@ -18,3 +18,9 @@ package-lock.json
 build/*.vsix
 CLAUDE.md
 .gitignore
+test/**
+.vscode-test/**
+.vscode-test.mjs
+vitest.config.ts
+tsconfig.test.json
+build/test/**

@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+# scripts/gen-vault-fixtures
+#
+# Regenerates the known-answer vectors in test/fixtures/vault/ with the real
+# ansible-vault (AVE-0001). Password for all vectors: test-password.
+set -euo pipefail
+
+cd "$(dirname "$0")/.."
+dir=test/fixtures/vault
+mkdir -p "$dir"
+pw=$(mktemp)
+trap 'rm -f "$pw"' EXIT
+printf 'test-password' >"$pw"
+
+printf '' >"$dir/empty.txt"
+printf 'hello vault\n' >"$dir/short.txt"
+printf 'line one\nline two\n  indented: "quoted" # not a comment\n' >"$dir/multiline.txt"
+cp "$dir/short.txt" "$dir/with-id.txt"
+
+gen() { # name vault-id-arg
+  local name=$1 idarg=$2
+  rm -f "$dir/$name.vault"
+  cp "$dir/$name.txt" "$dir/$name.vault"
+  ansible-vault encrypt --vault-id "$idarg" "$dir/$name.vault" 2>&1 | cat >&2
+}
+
+gen empty "@$pw"
+gen short "@$pw"
+gen multiline "@$pw"
+gen with-id "prod@$pw"

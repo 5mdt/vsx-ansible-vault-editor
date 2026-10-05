@@ -1,20 +1,13 @@
 import * as vscode from "vscode";
 
-const COMMANDS = [
-  "ansibleVault.toggle",
-  "ansibleVault.toggleFile",
-  "ansibleVault.peek",
-  "ansibleVault.editDecrypted",
-  "ansibleVault.rekey",
-  "ansibleVault.rekeyWorkspace",
-  "ansibleVault.forgetPasswords",
-];
-
+// AVE-0014: command IDs come from package.json so the two cannot drift apart.
 export function registerCommands(context: vscode.ExtensionContext): void {
-  for (const id of COMMANDS) {
+  const commands: { command: string }[] =
+    context.extension.packageJSON.contributes.commands;
+  for (const { command } of commands) {
     context.subscriptions.push(
-      vscode.commands.registerCommand(id, () => {
-        void vscode.window.showInformationMessage(`${id}: not implemented yet`);
+      vscode.commands.registerCommand(command, () => {
+        void vscode.window.showInformationMessage(`${command}: not implemented yet`);
       }),
     );
   }

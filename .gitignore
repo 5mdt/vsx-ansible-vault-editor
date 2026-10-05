@@ -49,3 +49,6 @@ temp/
 *.bak
 __pycache__/
 *.pyc
+
+# VS Code test host cache
+.vscode-test/

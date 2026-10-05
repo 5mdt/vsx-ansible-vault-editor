@@ -42,7 +42,7 @@ flowchart LR
 
 - Round-trip for 1.1 and 1.2 with empty, short, block-aligned and multi-KB payloads.
 - Known-answer vectors produced by `ansible-vault`.
-- Tampered ciphertext, tampered HMAC, wrong password -> distinct errors.
+- Tampered ciphertext, tampered HMAC, wrong password -> "wrong password or corrupted vault" error, distinct from malformed-envelope errors.
 - Malformed header, odd hex length, unknown cipher.
 - CRLF-wrapped ciphertext decrypts.
 

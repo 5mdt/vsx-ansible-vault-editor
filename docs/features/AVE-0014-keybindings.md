@@ -15,6 +15,9 @@ The extension ships **no default key bindings**. Every command has a stable ID a
 | `ansibleVault.encrypt`         | encrypt selection / value / file  | [AVE-0005](AVE-0005-file-encrypt-decrypt.md), [AVE-0006](AVE-0006-inline-variable.md) |
 | `ansibleVault.decrypt`         | decrypt block / file              | AVE-0005, AVE-0006 (same links)                                                       |
 | `ansibleVault.toggle`          | encrypt or decrypt as appropriate | AVE-0005, AVE-0006 (same links)                                                       |
+| `ansibleVault.encryptFile`     | encrypt the whole file            | [AVE-0005](AVE-0005-file-encrypt-decrypt.md)                                          |
+| `ansibleVault.decryptFile`     | decrypt the whole file            | AVE-0005 (same link)                                                                  |
+| `ansibleVault.toggleFile`      | encrypt or decrypt the whole file | AVE-0005 (same link)                                                                  |
 | `ansibleVault.peek`            | show / copy plaintext             | [AVE-0007](AVE-0007-peek-decrypted.md)                                                |
 | `ansibleVault.editDecrypted`   | open decrypted virtual document   | [AVE-0008](AVE-0008-edit-decrypted.md)                                                |
 | `ansibleVault.rekey`           | rekey file / selection            | [AVE-0009](AVE-0009-rekey.md)                                                         |

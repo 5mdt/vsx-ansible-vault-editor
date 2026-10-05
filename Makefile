@@ -1,8 +1,8 @@
-.PHONY: all ddd install compile watch lint package publish-vsce publish-ovsx clean
+.PHONY: all ddd install compile watch lint test test-unit test-integration test-extension package publish-vsce publish-ovsx clean
 
 VSIX = build/ansible-vault-editor.vsix
 
-all: lint compile
+all: lint compile test-unit
 
 ddd:
 	./scripts/ddd/ddd check
@@ -18,6 +18,17 @@ watch:
 
 lint: ddd
 	npm run lint
+
+test: test-unit test-integration
+
+test-unit:
+	npm run test:unit
+
+test-integration:
+	npm run test:integration
+
+test-extension:
+	npm run test:extension
 
 package: compile
 	npx vsce package --out $(VSIX)

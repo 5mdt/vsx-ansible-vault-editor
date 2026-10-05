@@ -29,8 +29,24 @@
   "contributes": {
     "commands": [
       {
+        "command": "ansibleVault.encrypt",
+        "title": "Ansible Vault: Encrypt Selection or File"
+      },
+      {
+        "command": "ansibleVault.decrypt",
+        "title": "Ansible Vault: Decrypt Block or File"
+      },
+      {
         "command": "ansibleVault.toggle",
-        "title": "Ansible Vault: Toggle Encrypt/Decrypt Selection"
+        "title": "Ansible Vault: Toggle Encrypt/Decrypt"
+      },
+      {
+        "command": "ansibleVault.encryptFile",
+        "title": "Ansible Vault: Encrypt File"
+      },
+      {
+        "command": "ansibleVault.decryptFile",
+        "title": "Ansible Vault: Decrypt File"
       },
       {
         "command": "ansibleVault.toggleFile",
@@ -42,7 +58,7 @@
       },
       {
         "command": "ansibleVault.editDecrypted",
-        "title": "Ansible Vault: Edit Decrypted Value"
+        "title": "Ansible Vault: Edit Decrypted"
       },
       {
         "command": "ansibleVault.rekey",
@@ -51,6 +67,10 @@
       {
         "command": "ansibleVault.rekeyWorkspace",
         "title": "Ansible Vault: Rekey Workspace"
+      },
+      {
+        "command": "ansibleVault.toggleMarker",
+        "title": "Ansible Vault: Toggle Transparent Marker"
       },
       {
         "command": "ansibleVault.forgetPasswords",
@@ -87,12 +107,20 @@
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
     "lint": "tsc -p ./ --noEmit",
-    "package": "vsce package --out build/"
+    "package": "vsce package --out build/",
+    "test:unit": "vitest run test/unit",
+    "test:integration": "vitest run test/integration",
+    "test:extension": "tsc -p ./ && tsc -p tsconfig.test.json && vscode-test"
   },
   "devDependencies": {
-    "@types/node": "^20.0.0",
+    "@types/mocha": "^10.0.10",
+    "@types/node": "^22.20.5",
     "@types/vscode": "^1.85.0",
+    "@vscode/test-cli": "^0.0.15",
+    "@vscode/test-electron": "^3.1.0",
     "@vscode/vsce": "^3.0.0",
-    "typescript": "^5.4.0"
+    "mocha": "^12.0.3",
+    "typescript": "^5.4.0",
+    "vitest": "^5.0.3"
   }
 }
