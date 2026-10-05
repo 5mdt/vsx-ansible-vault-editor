@@ -2,7 +2,7 @@
   "name": "ansible-vault-editor",
   "displayName": "Ansible Vault Editor",
   "description": "Encrypt, decrypt and edit Ansible Vault files and inline !vault values.",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "publisher": "5mdt",
   "icon": "extension/logo_x4.png",
   "author": "Vladimir Budylnikov (@nett00n)",
