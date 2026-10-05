@@ -112,6 +112,19 @@
           "type": "string",
           "default": "",
           "description": "Path to a vault password file or executable, relative to the workspace root. Overrides ANSIBLE_VAULT_PASSWORD_FILE and ansible.cfg."
+        },
+        "ansibleVault.hover.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show the decrypted value when hovering a !vault block or a vaulted file's header. The CodeLens and the Peek command stay available when off."
+        },
+        "ansibleVault.peekExclude": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [],
+          "description": "Glob patterns of files whose values are never shown by hover, CodeLens or Peek."
         }
       }
     },
@@ -150,6 +163,16 @@
           "command": "ansibleVault.decrypt",
           "when": "editorTextFocus && resourceLangId =~ /^(yaml|ansible)$/",
           "group": "1_modification@2"
+        },
+        {
+          "command": "ansibleVault.peek",
+          "when": "editorTextFocus && (ansibleVault.inVaultBlock || ansibleVault.fileIsVaulted)",
+          "group": "1_modification@3"
+        },
+        {
+          "command": "ansibleVault.editDecrypted",
+          "when": "editorTextFocus && (ansibleVault.inVaultBlock || ansibleVault.fileIsVaulted)",
+          "group": "1_modification@4"
         }
       ]
     }

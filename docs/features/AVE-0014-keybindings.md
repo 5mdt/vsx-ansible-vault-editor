@@ -27,7 +27,7 @@ The extension ships **no default key bindings**. Every command has a stable ID a
 | `ansibleVault.toggleMarker`     | toggle `# ansible-vault: encrypt` | [AVE-0013](AVE-0013-transparent-vault.md)                                             |
 | `ansibleVault.forgetPasswords`  | clear remembered passwords        | [AVE-0003](AVE-0003-password-resolution.md)                                           |
 
-Context awareness, in a YAML document: with a selection inside one scalar, or the cursor on a plain scalar value, `encrypt` and `toggle` act on that value; with the cursor in a `!vault` block, `decrypt` and `toggle` act on the block; otherwise they act on the whole file. `decrypt` with nothing vaulted under the cursor or in the file is refused with "nothing to decrypt here".
+Context awareness, in a YAML document: with a selection inside one scalar, or the cursor on a plain scalar value, `encrypt` and `toggle` act on that value; with the cursor in a `!vault` block, `decrypt` and `toggle` act on the block; otherwise they act on the whole file. `decrypt` with nothing vaulted under the cursor or in the file is refused with "nothing to decrypt here". `peek` and `editDecrypted` act on the block under the cursor, otherwise on the vaulted file, otherwise refuse the same way.
 
 Context keys for `when` clauses come from [AVE-0012](AVE-0012-detection-status.md): `ansibleVault.fileIsVaulted`, `ansibleVault.inVaultBlock`, `ansibleVault.hasMarker`.
 

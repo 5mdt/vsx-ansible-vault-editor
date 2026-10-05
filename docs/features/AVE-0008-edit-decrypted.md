@@ -24,6 +24,12 @@ flowchart LR
 
 ## Quirks & Decisions
 
+- Decision: the virtual document URI is `ansible-vault:/<basename>?src=<source uri>&block=<key path>`. File mode keeps the source basename so the language mode follows; block mode uses a `.txt` name.
+- Decision: a change to the source is detected by a SHA-256 of its bytes at open versus at save. Cancel fails the save, so the tab stays dirty; Reload re-reads the source and reverts the tab.
+- Decision: block mode finds the block again at save by its key path and order. If the path is gone the save fails with a clear message. If the source file is open with unsaved changes, the command refuses with "save the file first".
+- Decision: the source file's EOL is kept (CRLF stays CRLF), and closing the tab drops the plaintext and the secret. The tab is opened through the editor service (`vscode.open`), never `openTextDocument`, because the latter keeps an API reference alive for minutes after the tab closes and the plaintext with it.
+- Quirk: VS Code's hot-exit and crash-recovery backups can write unsaved edits of any dirty document, including `ansible-vault:` ones, to its user-data backup folder in plaintext. Proposed: the first time `editDecrypted` runs with `files.hotExit` not `off`, show a one-time warning with "Open settings"; setting `files.hotExit` to `off` avoids it. This could not be reproduced or ruled out in the test host, so it is a documented risk, not a verified behavior.
+
 - Decision: this explicit mode is separate from [transparent mode](AVE-0013-transparent-vault.md); it needs no marker comments and no setting.
 
 ## Testing
@@ -35,11 +41,17 @@ flowchart LR
 ### Unit
 
 - Provider read decrypts, write encrypts; vault ID preserved; no temp files created.
+- Block mode rewrites only that block and keeps CRLF; a removed block fails clearly.
+- A changed source yields a conflict, and overwrite proceeds.
 
 ### Integration
 
-- Concurrent external change triggers the conflict prompt.
+- The saved file opens with `ansible-vault view`, in file mode and block mode.
+
+### Extension host
+
+- Edit, save, close: the source on disk is ciphertext throughout and the system temp dir gains no plaintext.
 
 ## Status
 
-Planned
+Implemented

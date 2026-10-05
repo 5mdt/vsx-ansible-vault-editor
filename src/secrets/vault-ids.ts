@@ -45,16 +45,28 @@ export async function chooseEncryptId(
   return { cancelled: false, vaultId: choice ?? undefined };
 }
 
-// #AVE-0004
-export async function decryptWithSecrets(
+export interface Decrypted {
+  plaintext: Buffer;
+  vaultId?: string;
+  /** The secret that worked; needed to re-encrypt (#AVE-0008). Never log it. */
+  secret: string;
+}
+
+interface Attempt {
+  found?: Decrypted;
+  /** How many distinct secrets were tried. */
+  tried: number;
+}
+
+/** Try every known secret without prompting: the ID's own first, then the rest. */
+async function tryKnownSecrets(
   text: string,
   backend: VaultBackend,
   resolver: SecretResolver,
-): Promise<{ plaintext: Buffer; vaultId?: string }> {
-  const id = parseEnvelope(text).vaultId ?? DEFAULT_LABEL;
+  id: string,
+): Promise<Attempt> {
   const order = [id, ...(await resolver.labels()).filter((l) => l !== id)];
   const tried = new Set<string>();
-
   for (const label of order) {
     for (const secret of await resolver.candidates(label)) {
       if (tried.has(secret)) continue;
@@ -62,13 +74,25 @@ export async function decryptWithSecrets(
       try {
         const out = await backend.decrypt(text, secret);
         await resolver.confirm(label, secret);
-        return out;
+        return { found: { ...out, secret }, tried: tried.size };
       } catch (e) {
         if (!(e instanceof VaultAuthError)) throw e;
         await resolver.reject(label, secret);
       }
     }
   }
+  return { tried: tried.size };
+}
+
+// #AVE-0004
+export async function decryptWithSecrets(
+  text: string,
+  backend: VaultBackend,
+  resolver: SecretResolver,
+): Promise<Decrypted> {
+  const id = parseEnvelope(text).vaultId ?? DEFAULT_LABEL;
+  const attempt = await tryKnownSecrets(text, backend, resolver, id);
+  if (attempt.found) return attempt.found;
 
   let mismatch = false;
   for (;;) {
@@ -77,13 +101,30 @@ export async function decryptWithSecrets(
     try {
       const out = await backend.decrypt(text, secret);
       await resolver.confirm(id, secret);
-      return out;
+      return { ...out, secret };
     } catch (e) {
       if (!(e instanceof VaultAuthError)) throw e;
       await resolver.reject(id, secret);
       mismatch = true;
     }
   }
+}
+
+export type QuietResult =
+  | ({ ok: true } & Decrypted)
+  | { ok: false; reason: "no-secret" | "wrong" };
+
+/** Like decryptWithSecrets but never prompts: for hovers and other passive reads. */
+// #AVE-0007
+export async function decryptQuiet(
+  text: string,
+  backend: VaultBackend,
+  resolver: SecretResolver,
+): Promise<QuietResult> {
+  const id = parseEnvelope(text).vaultId ?? DEFAULT_LABEL;
+  const attempt = await tryKnownSecrets(text, backend, resolver, id);
+  if (attempt.found) return { ok: true, ...attempt.found };
+  return { ok: false, reason: attempt.tried === 0 ? "no-secret" : "wrong" };
 }
 
 /** The secret to encrypt with: configured first, else prompt. Remembered right away if asked. */

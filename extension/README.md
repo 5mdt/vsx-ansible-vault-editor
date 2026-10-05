@@ -7,6 +7,8 @@ Encrypt, decrypt and edit [Ansible Vault](https://docs.ansible.com/ansible/lates
 - **Whole files:** encrypt, decrypt or toggle a file from the Command Palette, the Explorer context menu (multi-select supported) or the editor title button. One undo step per file.
 - **Inline values:** put the cursor on a YAML value, or select inside one, and encrypt it to a `!vault |` block. Decrypt puts the plain value back. A lightbulb action appears on values and blocks.
 - **Whole-file inline:** `Encrypt Values in File` lets you pick which values to encrypt; `Decrypt All Values in File` decrypts every block at once.
+- **Peek without changing anything:** hover a `!vault` block (or a vaulted file's first line) to see the value, with Copy and Edit decrypted links; a CodeLens above each block offers Show value and Copy value. Needs an already-known password; the hover never prompts.
+- **Edit decrypted:** `Ansible Vault: Edit Decrypted` opens the file, or the block under the cursor, in a normal tab. The plaintext lives only in memory; saving re-encrypts with the same vault ID and writes the source. If the file changed on disk meanwhile you choose Overwrite or Reload.
 - **Status at a glance:** a status bar item shows `🔒 prod`, `🔒 vault` or `🔒 N inline`; `!vault` blocks are highlighted and foldable.
 - **Compatible:** produces and reads the exact `ansible-vault` format (1.1 and 1.2, AES256), including vault IDs. No Ansible install is needed unless you choose the CLI backend.
 
@@ -30,12 +32,14 @@ With one known vault ID it is used silently; with several you pick one; with non
 
 ## Settings
 
-| Setting                       | Default         | Meaning                                                 |
-|-------------------------------|-----------------|---------------------------------------------------------|
-| `ansibleVault.backend`        | `native`        | `native` (built in) or `cli` (your `ansible-vault`)     |
-| `ansibleVault.cliPath`        | `ansible-vault` | executable used by the `cli` backend                    |
-| `ansibleVault.passwordFile`   | empty           | password file or script, relative to the workspace root |
-| `ansibleVault.defaultVaultId` | empty           | vault ID used when none is known                        |
+| Setting                       | Default         | Meaning                                                                |
+|-------------------------------|-----------------|------------------------------------------------------------------------|
+| `ansibleVault.backend`        | `native`        | `native` (built in) or `cli` (your `ansible-vault`)                    |
+| `ansibleVault.cliPath`        | `ansible-vault` | executable used by the `cli` backend                                   |
+| `ansibleVault.passwordFile`   | empty           | password file or script, relative to the workspace root                |
+| `ansibleVault.hover.enabled`  | `true`          | show decrypted values on hover (CodeLens and Peek stay)                |
+| `ansibleVault.peekExclude`    | empty           | globs of files whose values are never shown by hover, CodeLens or Peek |
+| `ansibleVault.defaultVaultId` | empty           | vault ID used when none is known                                       |
 
 If the `cli` backend is selected and the executable is missing, you are offered "Switch to native" or "Open settings"; there is no silent fallback.
 
@@ -51,9 +55,13 @@ The extension ships no default key bindings, to avoid clashing with other extens
 ]
 ```
 
+## Keeping plaintext off disk
+
+Peek and Edit Decrypted keep plaintext in memory only. One caveat: VS Code's own hot exit can back up unsaved edits of any open document, including decrypted tabs, to its user-data folder. Set `files.hotExit` to `off` to avoid that; the extension warns once the first time you use Edit Decrypted.
+
 ## Not yet available
 
-Peek at decrypted values, edit decrypted, rekey and transparent decrypt-on-open are planned and their commands are placeholders for now.
+Rekey and transparent decrypt-on-open are planned and their commands are placeholders for now.
 
 ## License
 

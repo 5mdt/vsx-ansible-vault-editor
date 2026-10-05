@@ -4,6 +4,7 @@ import { encrypt } from "../../src/vault/format";
 import {
   NoSecretMatchedError,
   chooseEncryptId,
+  decryptQuiet,
   decryptWithSecrets,
   knownVaultIds,
   secretForEncrypt,
@@ -191,5 +192,55 @@ describe("secret for encrypt", () => {
   it("cancelled prompt -> undefined", async () => {
     const { resolver } = make({});
     expect(await secretForEncrypt(resolver, "prod")).toBeUndefined();
+  });
+});
+
+// #AVE-0007
+describe("quiet decrypt", () => {
+  const backend = new NativeBackend();
+  const noPrompt: PromptFn = async () => {
+    throw new Error("must not prompt");
+  };
+
+  it("decrypts with a known secret and reports which one", async () => {
+    const { resolver } = make({ prod: "pw" }, noPrompt);
+    const out = await decryptQuiet(encrypt("hi", "pw", { vaultId: "prod" }), backend, resolver);
+    expect(out.ok).toBe(true);
+    if (out.ok) {
+      expect(out.plaintext.toString()).toBe("hi");
+      expect(out.vaultId).toBe("prod");
+      expect(out.secret).toBe("pw");
+    }
+  });
+
+  it("no candidates at all -> no-secret, never prompts", async () => {
+    const { resolver } = make({}, noPrompt);
+    expect(await decryptQuiet(encrypt("hi", "pw"), backend, resolver)).toEqual({
+      ok: false,
+      reason: "no-secret",
+    });
+  });
+
+  it("candidates that all fail -> wrong, never prompts", async () => {
+    const { resolver } = make({ prod: "nope", dev: "also-nope" }, noPrompt);
+    expect(await decryptQuiet(encrypt("hi", "pw"), backend, resolver)).toEqual({
+      ok: false,
+      reason: "wrong",
+    });
+  });
+
+  it("non-auth errors propagate", async () => {
+    const boom = new Error("disk");
+    const failing = { ...backend, decrypt: async () => { throw boom; } } as unknown as NativeBackend;
+    const { resolver } = make({ prod: "a" }, noPrompt);
+    await expect(
+      decryptQuiet(encrypt("x", "a", { vaultId: "prod" }), failing, resolver),
+    ).rejects.toBe(boom);
+  });
+
+  it("decryptWithSecrets now reports the secret that worked", async () => {
+    const { resolver } = make({ prod: "pw" });
+    const out = await decryptWithSecrets(encrypt("hi", "pw", { vaultId: "prod" }), backend, resolver);
+    expect(out.secret).toBe("pw");
   });
 });

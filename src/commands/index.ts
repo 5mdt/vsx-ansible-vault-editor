@@ -1,6 +1,9 @@
 import * as path from "node:path";
 import * as vscode from "vscode";
 import { fileVaultId } from "../detect";
+import { type DecryptedFs } from "../edit/provider";
+import { peekExcluded, type PeekArg } from "../peek/hover";
+import { peekTarget } from "../peek/peek";
 import { decryptBlockEdit, encryptValueEdit, RefusedError, type TextEdit } from "../inline/edits";
 import {
   inlineTargets,
@@ -11,6 +14,7 @@ import {
 } from "../inline/yaml-values";
 import type { SecretResolver } from "../secrets/resolver";
 import { pickVaultId } from "../secrets";
+import { decryptWithSecrets } from "../secrets/vault-ids";
 import { getBackend, handleBackendError } from "../vault";
 import { eolOf, isYamlDocument } from "../vscode-util";
 import { fileDecrypt, fileEncrypt, planFile, type FileOp } from "./file-ops";
@@ -207,11 +211,83 @@ async function decryptAllInFile(resolver: SecretResolver): Promise<void> {
   }
 }
 
+// #AVE-0007
+async function peekCommand(resolver: SecretResolver, arg?: PeekArg): Promise<void> {
+  let doc: vscode.TextDocument;
+  let offset: number;
+  if (arg?.uri) {
+    doc = await vscode.workspace.openTextDocument(vscode.Uri.parse(arg.uri));
+    offset = arg.offset;
+  } else {
+    const editor = activeEditor();
+    doc = editor.document;
+    offset = doc.offsetAt(editor.selection.active);
+  }
+  if (peekExcluded(doc)) throw new RefusedError("peek is disabled for this file (ansibleVault.peekExclude)");
+  const target = peekTarget(doc.getText(), offset);
+  if (!target) throw new RefusedError("nothing to decrypt here");
+  // An explicit command may prompt; the hover never does.
+  const out = await decryptWithSecrets(target.ciphertext, getBackend(), resolver);
+  const value = out.plaintext.toString("utf8");
+  if (arg?.copy) {
+    await vscode.env.clipboard.writeText(value);
+    void vscode.window.showInformationMessage("Ansible Vault: copied");
+    return;
+  }
+  const pick = await vscode.window.showInformationMessage(value, "Copy");
+  if (pick === "Copy") await vscode.env.clipboard.writeText(value);
+}
+
+const HOT_EXIT_WARNED = "ansibleVault.hotExitWarned";
+
+/** VS Code may back up unsaved edits of any document to disk; warn once (#AVE-0008). */
+function warnAboutHotExit(context: vscode.ExtensionContext): void {
+  const hotExit = vscode.workspace.getConfiguration("files").get<string>("hotExit");
+  if (hotExit === "off" || context.globalState.get(HOT_EXIT_WARNED)) return;
+  void context.globalState.update(HOT_EXIT_WARNED, true);
+  void vscode.window
+    .showWarningMessage(
+      "Ansible Vault: VS Code's hot exit can back up unsaved edits to disk, including decrypted text. Set files.hotExit to off to avoid it.",
+      "Open settings",
+    )
+    .then((pick) => {
+      if (pick === "Open settings") {
+        void vscode.commands.executeCommand("workbench.action.openSettings", "files.hotExit");
+      }
+    });
+}
+
+// #AVE-0008
+async function editDecryptedCommand(
+  context: vscode.ExtensionContext,
+  fs: DecryptedFs,
+  arg?: PeekArg | vscode.Uri,
+): Promise<void> {
+  let source: vscode.Uri;
+  let offset: number | undefined;
+  if (arg instanceof vscode.Uri) {
+    source = arg;
+  } else if (arg?.uri) {
+    source = vscode.Uri.parse(arg.uri);
+    offset = arg.offset;
+  } else {
+    const editor = activeEditor();
+    source = editor.document.uri;
+    offset = editor.document.offsetAt(editor.selection.active);
+  }
+  const virtual = await fs.open(source, offset);
+  warnAboutHotExit(context);
+  // Not openTextDocument: that keeps an API reference alive for minutes after the tab closes,
+  // and with it the plaintext. The editor service drops the model when the tab closes.
+  await vscode.commands.executeCommand("vscode.open", virtual, { preview: false });
+}
+
 // AVE-0014: command IDs come from package.json so the two cannot drift apart.
-// #AVE-0003, #AVE-0005, #AVE-0006: the handlers below are real; the rest stay stubs.
+// #AVE-0003, #AVE-0005, #AVE-0006, #AVE-0007, #AVE-0008: the handlers below are real; the rest stay stubs.
 export function registerCommands(
   context: vscode.ExtensionContext,
   resolver: SecretResolver,
+  editFs: DecryptedFs,
 ): void {
   const handlers: Record<string, (...args: unknown[]) => Promise<void> | void> = {
     "ansibleVault.forgetPasswords": async () => {
@@ -227,6 +303,9 @@ export function registerCommands(
       guarded(async () => fileCommand("decrypt", collectUris(a), resolver)),
     "ansibleVault.toggleFile": (...a) =>
       guarded(async () => fileCommand("toggle", collectUris(a), resolver)),
+    "ansibleVault.peek": (arg) => guarded(() => peekCommand(resolver, arg as PeekArg | undefined)),
+    "ansibleVault.editDecrypted": (arg) =>
+      guarded(() => editDecryptedCommand(context, editFs, arg as PeekArg | vscode.Uri | undefined)),
     "ansibleVault.encryptAllInFile": () => guarded(() => encryptAllInFile(resolver)),
     "ansibleVault.decryptAllInFile": () => guarded(() => decryptAllInFile(resolver)),
   };
