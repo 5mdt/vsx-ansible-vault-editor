@@ -41,8 +41,10 @@ bench:
 	npm run bench
 
 # Overwrite the committed baseline from a fresh run.
+# The writer emits JS number syntax (0.000048); pretty-format-json wants Python's (4.8e-05), so normalise after.
 bench-baseline:
 	npm run bench:baseline
+	for f in test/bench/baseline/*.json; do python3 -c 'import json,sys; p=sys.argv[1]; d=json.load(open(p)); open(p,"w").write(json.dumps(d,indent=2,ensure_ascii=False)+"\n")' "$$f"; done
 
 screenshots: compile
 	npx esbuild scripts/screenshots/run.ts --bundle --platform=node --format=cjs --external:playwright-core --external:@vscode/test-electron --outfile=build/screenshots-run/run.js
