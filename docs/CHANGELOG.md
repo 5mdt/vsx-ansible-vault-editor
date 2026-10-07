@@ -1,6 +1,8 @@
 # Changelog
 
 ## Unreleased
+
+## v1.2.0 (2026-10-07)
 - #BUG-0014: shared `RefusedError` and `seal()` moved out of `inline/` and `commands/` into `src/errors.ts` and `src/vault/seal.ts`
 - #BUG-0012: one vault header parser (`src/vault/header.ts`); reading a vault ID no longer decodes the body, and `fileVaultId` no longer requires the `AES256` cipher
 - #BUG-0011: one `applyTextEdits` replaces five copies of the reverse-sorted splice; overlapping edits no longer duplicate text
