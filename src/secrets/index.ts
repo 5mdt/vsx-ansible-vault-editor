@@ -3,6 +3,7 @@
 import { homedir } from "node:os";
 import * as vscode from "vscode";
 import { SecretResolver, type PromptFn, type SecretStore } from "./resolver";
+import { pickerItems } from "./pick-items";
 import type { PickFn } from "./vault-ids";
 
 const INDEX_KEY = "ansibleVault.rememberedKeys";
@@ -71,17 +72,10 @@ export const promptForPassword: PromptFn = (vaultId, mismatch) =>
   });
 
 // #AVE-0004
-// #BUG-0016: builds and sorts its items the same way as pickRekeyId below.
 export const pickVaultId: PickFn = async (ids, defaultId) => {
-  const items: vscode.QuickPickItem[] = [
-    ...ids.map((id) => ({ label: id, description: id === defaultId ? "(default)" : "" })),
-    { label: NO_ID_LABEL },
-  ];
-  const pick = await vscode.window.showQuickPick(
-    // default first so it is pre-selected
-    items.sort((a, b) => Number(b.description !== "") - Number(a.description !== "")),
-    { title: "Select vault ID" },
-  );
+  const pick = await vscode.window.showQuickPick(pickerItems(ids, defaultId, [NO_ID_LABEL]), {
+    title: "Select vault ID",
+  });
   if (!pick) return undefined;
   return pick.label === NO_ID_LABEL ? null : pick.label;
 };
@@ -94,8 +88,7 @@ export function createResolver(
   const resolver = new SecretResolver({
     get passwordFile() {
       return (
-        vscode.workspace.getConfiguration("ansibleVault").get<string>("passwordFile") ||
-        undefined
+        vscode.workspace.getConfiguration("ansibleVault").get<string>("passwordFile") || undefined
       );
     },
     env: process.env,
@@ -129,13 +122,8 @@ export async function pickRekeyId(
   known: string[],
   defaultId: string | undefined,
 ): Promise<{ vaultId?: string } | undefined> {
-  const items: vscode.QuickPickItem[] = [
-    ...known.map((id) => ({ label: id, description: id === defaultId ? "(default)" : "" })),
-    { label: NO_ID_LABEL },
-    { label: NEW_ID },
-  ];
   const pick = await vscode.window.showQuickPick(
-    items.sort((a, b) => Number(b.description !== "") - Number(a.description !== "")),
+    pickerItems(known, defaultId, [NO_ID_LABEL, NEW_ID]),
     { title: "Rekey to vault ID" },
   );
   if (!pick) return undefined;
@@ -143,7 +131,8 @@ export async function pickRekeyId(
   if (pick.label !== NEW_ID) return { vaultId: pick.label };
   const typed = await vscode.window.showInputBox({
     title: "New vault ID",
-    validateInput: (v) => (/^\S+$/.test(v) && !v.includes(";") ? undefined : "no spaces or semicolons"),
+    validateInput: (v) =>
+      /^\S+$/.test(v) && !v.includes(";") ? undefined : "no spaces or semicolons",
   });
   return typed ? { vaultId: typed } : undefined;
 }

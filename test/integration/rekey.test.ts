@@ -32,15 +32,27 @@ const view = (file: string) =>
 // #AVE-0009, #AVE-0010
 describe.skipIf(!hasVault)("rekeyed text opens with ansible-vault", () => {
   it("a file", async () => {
-    const out = await rekeyText(encrypt("a: 1\n", "old"), { vaultId: "prod", secret: "new-password" }, deps());
+    const out = await rekeyText(
+      encrypt("a: 1\n", "old"),
+      { vaultId: "prod", secret: "new-password" },
+      deps(),
+    );
     const file = join(dir, "file.yml");
     writeFileSync(file, out.text);
     expect(view(file)).toBe("a: 1\n");
   });
 
   it("a block", async () => {
-    const lines = encrypt("hello", "old").trimEnd().split("\n").map((l) => "  " + l).join("\n");
-    const out = await rekeyText(`a: 1\nk: !vault |\n${lines}\n`, { vaultId: "prod", secret: "new-password" }, deps());
+    const lines = encrypt("hello", "old")
+      .trimEnd()
+      .split("\n")
+      .map((l) => "  " + l)
+      .join("\n");
+    const out = await rekeyText(
+      `a: 1\nk: !vault |\n${lines}\n`,
+      { vaultId: "prod", secret: "new-password" },
+      deps(),
+    );
     const file = join(dir, "block.vault");
     writeFileSync(file, findVaultBlocks(out.text)[0].ciphertext);
     expect(view(file).trimEnd()).toBe("hello");

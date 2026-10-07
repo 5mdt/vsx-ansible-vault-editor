@@ -26,10 +26,7 @@ export interface PromptResult {
   remember: boolean;
 }
 
-export type PromptFn = (
-  vaultId: string,
-  mismatch: boolean,
-) => Promise<PromptResult | undefined>;
+export type PromptFn = (vaultId: string, mismatch: boolean) => Promise<PromptResult | undefined>;
 
 export interface ResolverDeps {
   /** `ansibleVault.passwordFile` */

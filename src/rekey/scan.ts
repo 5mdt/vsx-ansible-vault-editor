@@ -29,7 +29,9 @@ export function excludeGlob(
   rekeyExclude: string[],
 ): string | undefined {
   const globs = [
-    ...Object.entries(filesExclude).filter(([, on]) => on).map(([g]) => g),
+    ...Object.entries(filesExclude)
+      .filter(([, on]) => on)
+      .map(([g]) => g),
     ...rekeyExclude,
   ];
   if (!globs.length) return undefined;
@@ -46,7 +48,10 @@ export function idCounts(entries: ScanEntry[]): Map<string, number> {
 
 /** Entries with at least one item under `id`; undefined keeps everything. */
 // #AVE-0010
-export function filterById<T extends { entry: ScanEntry }>(items: T[], id: string | undefined): T[] {
+export function filterById<T extends { entry: ScanEntry }>(
+  items: T[],
+  id: string | undefined,
+): T[] {
   return id === undefined ? items : items.filter((i) => i.entry.vaultIds.includes(id));
 }
 
@@ -60,7 +65,11 @@ export function previewTitle(entries: ScanEntry[]): string {
  * Map `items` with at most `limit` calls in flight; results keep input order.
  * #BUG-0010, #AVE-0010
  */
-export async function mapLimit<T, R>(items: readonly T[], limit: number, fn: (item: T) => Promise<R>): Promise<R[]> {
+export async function mapLimit<T, R>(
+  items: readonly T[],
+  limit: number,
+  fn: (item: T) => Promise<R>,
+): Promise<R[]> {
   const out = new Array<R>(items.length);
   let next = 0;
   const worker = async () => {

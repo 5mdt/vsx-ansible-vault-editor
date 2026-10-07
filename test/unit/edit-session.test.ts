@@ -1,8 +1,9 @@
 import fs from "node:fs";
 import { parse as yamlParse } from "yaml";
 import { describe, expect, it, vi } from "vitest";
-import { hashText, openEdit, saveEdit } from "../../src/edit/session";
-import { RefusedError } from "../../src/inline/edits";
+import { openEdit, saveEdit } from "../../src/edit/session";
+import { hashText } from "../../src/util";
+import { RefusedError } from "../../src/errors";
 import { inlineTargets } from "../../src/inline/yaml-values";
 import { SecretResolver, type SecretStore } from "../../src/secrets/resolver";
 import { NativeBackend } from "../../src/vault/backend";
@@ -36,16 +37,9 @@ function withBlocks(eol: "\n" | "\r\n" = "\n"): string {
   const one = encrypt("first", "pw", { eol: "\n" }).trimEnd().split("\n");
   const two = encrypt("second", "pw", { vaultId: "prod" }).trimEnd().split("\n");
   const ind = (ls: string[]) => ls.map((l) => "    " + l).join("\n");
-  return [
-    "# keep",
-    "a:",
-    "  one: !vault |",
-    ind(one),
-    "  two: !vault |",
-    ind(two),
-    "z: 1",
-    "",
-  ].join("\n").replace(/\n/g, eol);
+  return ["# keep", "a:", "  one: !vault |", ind(one), "  two: !vault |", ind(two), "z: 1", ""]
+    .join("\n")
+    .replace(/\n/g, eol);
 }
 
 // #AVE-0008
@@ -151,9 +145,7 @@ describe("edit a single block", () => {
 
   it("offset outside any block falls back to nothing-to-decrypt", async () => {
     const source = withBlocks();
-    await expect(openEdit(source, source.indexOf("z: 1"), deps())).rejects.toThrow(
-      RefusedError,
-    );
+    await expect(openEdit(source, source.indexOf("z: 1"), deps())).rejects.toThrow(RefusedError);
   });
 });
 

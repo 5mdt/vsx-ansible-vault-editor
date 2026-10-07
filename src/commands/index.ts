@@ -1,6 +1,7 @@
 import * as path from "node:path";
+import { detectEol, errorMessage, failureText } from "../util";
 import * as vscode from "vscode";
-import { fileVaultId } from "../detect";
+import { fileVaultId, findVaultBlocks } from "../detect";
 import { toggleMarkerEdit } from "../transparent/markers";
 import type { DiffHandle } from "../diff";
 import type { GuardHandle } from "../guard";
@@ -8,7 +9,9 @@ import { rekeyCommand, rekeyWorkspaceCommand } from "../rekey";
 import { type DecryptedFs } from "../edit/provider";
 import { peekExcluded, type PeekArg } from "../peek/hover";
 import { peekTarget } from "../peek/peek";
-import { decryptBlockEdit, encryptValueEdit, RefusedError, type TextEdit } from "../inline/edits";
+import { RefusedError } from "../errors";
+import { COMMAND_IDS, type CommandId } from "./ids";
+import { decryptBlockEdit, encryptValueEdit, type TextEdit } from "../inline/edits";
 import {
   inlineTargets,
   plainScalars,
@@ -20,7 +23,14 @@ import type { SecretResolver } from "../secrets/resolver";
 import { pickVaultId } from "../secrets";
 import { decryptWithSecrets } from "../secrets/vault-ids";
 import { getBackend, handleBackendError } from "../vault";
-import { applyEdits, eolOf, isYamlDocument, replaceWholeDocument } from "../vscode-util";
+import {
+  applyEdits,
+  eolOf,
+  findOpenDocument,
+  readUtf8,
+  isYamlDocument,
+  replaceWholeDocument,
+} from "../vscode-util";
 import { fileDecrypt, fileEncrypt, planFile, type FileOp } from "./file-ops";
 import { prepareEncrypt, type OpsDeps } from "./session";
 
@@ -39,15 +49,13 @@ async function guarded(fn: () => Promise<void>): Promise<void> {
     await fn();
   } catch (e) {
     if (await handleBackendError(e)) return;
-    const message = e instanceof Error ? e.message : String(e);
+    const message = errorMessage(e);
     void vscode.window.showErrorMessage(`Ansible Vault: ${message}`);
   }
 }
 
 type Where =
-  | { kind: "value" | "block"; target: ValueTarget }
-  | { kind: "file" }
-  | { kind: "bad-selection" };
+  { kind: "value" | "block"; target: ValueTarget } | { kind: "file" } | { kind: "bad-selection" };
 
 /** What an editor command acts on: a value or block under the cursor, else the file. */
 function whereAmI(editor: vscode.TextEditor): Where {
@@ -61,6 +69,13 @@ function whereAmI(editor: vscode.TextEditor): Where {
     : scalarInSelection(text, start, doc.offsetAt(sel.end));
   if (target) return { kind: target.vault ? "block" : "value", target };
   return sel.isEmpty ? { kind: "file" } : { kind: "bad-selection" };
+}
+
+/** Show collected per-item failures as one error message, if there are any. */
+// #AVE-0005, #AVE-0006
+function showFailures(failures: string[]): void {
+  const text = failureText(failures);
+  if (text) void vscode.window.showErrorMessage(text);
 }
 
 function activeEditor(): vscode.TextEditor {
@@ -120,12 +135,8 @@ async function fileCommand(op: FileOp, uris: vscode.Uri[], resolver: SecretResol
   let asked = false;
   for (const uri of uris) {
     try {
-      const open = vscode.workspace.textDocuments.find(
-        (d) => d.uri.toString() === uri.toString(),
-      );
-      const text = open
-        ? open.getText()
-        : Buffer.from(await vscode.workspace.fs.readFile(uri)).toString("utf8");
+      const open = findOpenDocument(uri);
+      const text = open ? open.getText() : await readUtf8(uri);
       const plan = planFile(text, op);
       if (typeof plan === "object") throw new RefusedError(plan.refused);
       let out: string;
@@ -135,8 +146,7 @@ async function fileCommand(op: FileOp, uris: vscode.Uri[], resolver: SecretResol
           asked = true;
         }
         if (!session) return;
-        // #BUG-0013: EOL detection from text appears in four places.
-        const eol = open ? eolOf(open) : text.includes("\r\n") ? "\r\n" : "\n";
+        const eol = open ? eolOf(open) : detectEol(text);
         out = await fileEncrypt(text, session, eol);
       } else {
         out = await fileDecrypt(text, deps);
@@ -145,12 +155,10 @@ async function fileCommand(op: FileOp, uris: vscode.Uri[], resolver: SecretResol
       else await vscode.workspace.fs.writeFile(uri, Buffer.from(out, "utf8"));
     } catch (e) {
       if (await handleBackendError(e)) return;
-      failures.push(`${path.basename(uri.fsPath)}: ${e instanceof Error ? e.message : String(e)}`);
+      failures.push(`${path.basename(uri.fsPath)}: ${errorMessage(e)}`);
     }
   }
-  if (failures.length) {
-    void vscode.window.showErrorMessage(`Ansible Vault: ${failures.join("; ")}`);
-  }
+  showFailures(failures);
 }
 
 // #AVE-0006
@@ -180,11 +188,10 @@ async function encryptAllInFile(resolver: SecretResolver): Promise<void> {
 
 // #AVE-0006
 async function decryptAllInFile(resolver: SecretResolver): Promise<void> {
-  // #BUG-0016: re-implements findVaultBlocks and calls getText() twice; the failure-collect pattern is repeated three times.
   const editor = activeEditor();
   const doc = editor.document;
-  const { targets, ok } = inlineTargets(doc.getText());
-  const blocks = ok && !fileVaultId(doc.getText()) ? targets.filter((t) => t.vault) : [];
+  const text = doc.getText();
+  const blocks = inlineTargets(text).ok && !fileVaultId(text) ? findVaultBlocks(text) : [];
   if (!blocks.length) throw new RefusedError("nothing to decrypt here");
   const deps = opsDeps(resolver);
   const edits: TextEdit[] = [];
@@ -194,13 +201,11 @@ async function decryptAllInFile(resolver: SecretResolver): Promise<void> {
       edits.push(await decryptBlockEdit(b, deps, eolOf(doc)));
     } catch (e) {
       if (await handleBackendError(e)) return;
-      failures.push(`${b.path}: ${e instanceof Error ? e.message : String(e)}`);
+      failures.push(`${b.path}: ${errorMessage(e)}`);
     }
   }
   if (edits.length) await applyEdits(doc, edits);
-  if (failures.length) {
-    void vscode.window.showErrorMessage(`Ansible Vault: ${failures.join("; ")}`);
-  }
+  showFailures(failures);
 }
 
 // #AVE-0007
@@ -215,7 +220,8 @@ async function peekCommand(resolver: SecretResolver, arg?: PeekArg): Promise<voi
     doc = editor.document;
     offset = doc.offsetAt(editor.selection.active);
   }
-  if (peekExcluded(doc)) throw new RefusedError("peek is disabled for this file (ansibleVault.peekExclude)");
+  if (peekExcluded(doc))
+    throw new RefusedError("peek is disabled for this file (ansibleVault.peekExclude)");
   const target = peekTarget(doc.getText(), offset);
   if (!target) throw new RefusedError("nothing to decrypt here");
   // An explicit command may prompt; the hover never does.
@@ -280,11 +286,13 @@ async function editDecryptedCommand(
   warnAboutHotExit(context);
   // Not openTextDocument: that keeps an API reference alive for minutes after the tab closes,
   // and with it the plaintext. The editor service drops the model when the tab closes.
-  await vscode.commands.executeCommand("vscode.open", virtual, { preview: false });
+  await vscode.commands.executeCommand("vscode.open", virtual, {
+    preview: false,
+  });
 }
 
-// AVE-0014: command IDs come from package.json so the two cannot drift apart.
-// #AVE-0003, #AVE-0005, #AVE-0006, #AVE-0007, #AVE-0008, #AVE-0009, #AVE-0010, #AVE-0013, #AVE-0015: the handlers below are real; the rest stay stubs.
+// #AVE-0014, #AVE-0003, #AVE-0005, #AVE-0006, #AVE-0007, #AVE-0008, #AVE-0009, #AVE-0010, #AVE-0013, #AVE-0015
+// Handlers are keyed by CommandId (exhaustive at compile time); a unit test pins COMMAND_IDS to package.json.
 export function registerCommands(
   context: vscode.ExtensionContext,
   resolver: SecretResolver,
@@ -292,7 +300,7 @@ export function registerCommands(
   guard: GuardHandle,
   diff: DiffHandle,
 ): void {
-  const handlers: Record<string, (...args: unknown[]) => Promise<void> | void> = {
+  const handlers: Record<CommandId, (...args: unknown[]) => Promise<void> | void> = {
     "ansibleVault.forgetPasswords": async () => {
       await resolver.forget();
       void vscode.window.showInformationMessage("Ansible Vault: cached passwords forgotten");
@@ -319,18 +327,7 @@ export function registerCommands(
     "ansibleVault.encryptAllInFile": () => guarded(() => encryptAllInFile(resolver)),
     "ansibleVault.decryptAllInFile": () => guarded(() => decryptAllInFile(resolver)),
   };
-  const commands: { command: string }[] =
-    context.extension.packageJSON.contributes.commands;
-  for (const { command } of commands) {
-    context.subscriptions.push(
-      vscode.commands.registerCommand(
-        command,
-        // #BUG-0015: every command has a handler now; the fallback and the "stubs" comment above are stale.
-        handlers[command] ??
-          (() => {
-            void vscode.window.showInformationMessage(`${command}: not implemented yet`);
-          }),
-      ),
-    );
+  for (const command of COMMAND_IDS) {
+    context.subscriptions.push(vscode.commands.registerCommand(command, handlers[command]));
   }
 }

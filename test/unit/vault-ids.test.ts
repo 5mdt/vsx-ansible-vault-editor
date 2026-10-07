@@ -28,10 +28,7 @@ class MemStore implements SecretStore {
   }
 }
 
-function make(
-  keychain: Record<string, string>,
-  prompt: PromptFn = async () => undefined,
-) {
+function make(keychain: Record<string, string>, prompt: PromptFn = async () => undefined) {
   const store = new MemStore();
   for (const [k, v] of Object.entries(keychain)) store.data.set(k, v);
   return {
@@ -127,9 +124,7 @@ describe("decrypt with secrets", () => {
   it("1.1 header tries every known secret, first match wins", async () => {
     const text = encrypt("hi", "dev-pw");
     const { resolver } = make({ prod: "nope", dev: "dev-pw" });
-    expect((await decryptWithSecrets(text, backend, resolver)).plaintext.toString()).toBe(
-      "hi",
-    );
+    expect((await decryptWithSecrets(text, backend, resolver)).plaintext.toString()).toBe("hi");
   });
 
   it("prompts when nothing matches and remembers only after success", async () => {
@@ -231,7 +226,12 @@ describe("quiet decrypt", () => {
 
   it("non-auth errors propagate", async () => {
     const boom = new Error("disk");
-    const failing = { ...backend, decrypt: async () => { throw boom; } } as unknown as NativeBackend;
+    const failing = {
+      ...backend,
+      decrypt: async () => {
+        throw boom;
+      },
+    } as unknown as NativeBackend;
     const { resolver } = make({ prod: "a" }, noPrompt);
     await expect(
       decryptQuiet(encrypt("x", "a", { vaultId: "prod" }), failing, resolver),
@@ -240,7 +240,11 @@ describe("quiet decrypt", () => {
 
   it("decryptWithSecrets now reports the secret that worked", async () => {
     const { resolver } = make({ prod: "pw" });
-    const out = await decryptWithSecrets(encrypt("hi", "pw", { vaultId: "prod" }), backend, resolver);
+    const out = await decryptWithSecrets(
+      encrypt("hi", "pw", { vaultId: "prod" }),
+      backend,
+      resolver,
+    );
     expect(out.secret).toBe("pw");
   });
 });

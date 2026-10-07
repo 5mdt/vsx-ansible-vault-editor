@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { textconvCommand, withManagedAttributes, withoutManagedAttributes } from "../../src/diff/git-config";
+import {
+  textconvCommand,
+  withManagedAttributes,
+  withoutManagedAttributes,
+} from "../../src/diff/git-config";
 
 // #AVE-0015
 describe("git diff driver config", () => {

@@ -5,7 +5,11 @@ import { decrypt, encrypt } from "../../src/vault/format";
 const open: DecryptFn = async (c) => decrypt(c, "pw");
 const wrong: DecryptFn = async (c) => decrypt(c, "other");
 const block = (key: string, plain: string, eol = "\n") =>
-  `${key}: !vault |${eol}${encrypt(plain, "pw", { eol: "\n" }).trimEnd().split("\n").map((l) => "  " + l).join(eol)}${eol}`;
+  `${key}: !vault |${eol}${encrypt(plain, "pw", { eol: "\n" })
+    .trimEnd()
+    .split("\n")
+    .map((l) => "  " + l)
+    .join(eol)}${eol}`;
 
 // #AVE-0015
 describe("plain view", () => {
@@ -15,7 +19,9 @@ describe("plain view", () => {
 
   it("replaces blocks with their values and keeps the rest", async () => {
     const text = `head: 1\n${block("one", "first")}${block("two", "second")}tail: 2\n`;
-    expect(await plainView(text, open, "throw")).toBe("head: 1\none: first\ntwo: second\ntail: 2\n");
+    expect(await plainView(text, open, "throw")).toBe(
+      "head: 1\none: first\ntwo: second\ntail: 2\n",
+    );
   });
 
   it("handles multi-line values and CRLF", async () => {

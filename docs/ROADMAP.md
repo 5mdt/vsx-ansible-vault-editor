@@ -68,13 +68,5 @@
 
 ## 9. Code health
 
-1. BUG-0014 - move `RefusedError` and `seal` first; the rest import from there
-2. BUG-0012 - one vault header parser
-3. BUG-0011 - one `applyTextEdits` for the five splices
-4. BUG-0013 - shared helpers
-5. BUG-0016 - command-layer duplication
-6. BUG-0015 - dead and stale code
-7. BUG-0017 - save guard state machine, once the guard code has stopped moving
-8. BUG-0018 - formatter, last so it does not reflow code under the other changes
 
 **Done when:** `make ddd` and the unit tests pass and no `#BUG-` comments remain in `src/`.

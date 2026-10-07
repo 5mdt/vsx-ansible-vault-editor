@@ -1,4 +1,4 @@
-.PHONY: all logo site ddd roadmap release install compile watch lint test test-unit test-integration test-extension bench bench-baseline screenshots screenshots-publish package publish-vsce publish-ovsx clean
+.PHONY: all logo site ddd roadmap release install compile watch fmt lint test test-unit test-integration test-extension bench bench-baseline screenshots screenshots-publish package publish-vsce publish-ovsx clean
 
 VSIX = build/ansible-vault-editor.vsix
 BUMP ?= minor
@@ -20,6 +20,9 @@ compile:
 
 watch:
 	npm run watch
+
+fmt:
+	npm run format
 
 lint: ddd
 	npm run lint

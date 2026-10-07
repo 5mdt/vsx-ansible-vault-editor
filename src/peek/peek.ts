@@ -1,6 +1,5 @@
 // #AVE-0007: decide what a peek looks at and read it without ever prompting.
 
-import { createHash } from "node:crypto";
 import { fileVaultId } from "../detect";
 import { inlineTargets } from "../inline/yaml-values";
 import type { SecretResolver } from "../secrets/resolver";
@@ -76,10 +75,4 @@ export function hoverMarkdown(plaintext: string): string {
   const longest = Math.max(0, ...(plaintext.match(/`+/g) ?? []).map((r) => r.length));
   const fence = "`".repeat(Math.max(3, longest + 1));
   return `${fence}\n${plaintext}\n${fence}`;
-}
-
-/** For tests and callers that need a stable id of a document's text. */
-// #BUG-0015: unused; one of three sha256 helpers (see also hashText, plainHash) #BUG-0013.
-export function textHash(text: string): string {
-  return createHash("sha256").update(text, "utf8").digest("hex");
 }

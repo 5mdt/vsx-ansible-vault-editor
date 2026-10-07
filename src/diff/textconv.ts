@@ -40,7 +40,11 @@ export async function runTextconv(argv: string[], io: TextconvIo): Promise<void>
   }
 }
 
-async function convert(text: string, passwordFile: string | undefined, io: TextconvIo): Promise<string> {
+async function convert(
+  text: string,
+  passwordFile: string | undefined,
+  io: TextconvIo,
+): Promise<string> {
   const resolver = new SecretResolver({
     passwordFile,
     env: io.env,

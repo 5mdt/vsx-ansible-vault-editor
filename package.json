@@ -288,7 +288,9 @@
   "scripts": {
     "compile": "npm run lint && npm run bundle",
     "watch": "esbuild src/extension.ts src/textconv.ts --bundle --platform=node --format=cjs --external:vscode --sourcemap --outdir=build --watch",
-    "lint": "tsc -p ./ --noEmit",
+    "lint": "tsc -p ./ --noEmit && npm run format:check",
+    "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
+    "format:check": "prettier --check \"src/**/*.ts\" \"test/**/*.ts\"",
     "package": "npm run bundle && vsce package --no-dependencies --readme-path extension/README.md --baseImagesUrl https://github.com/5mdt/vsx-ansible-vault-editor/raw/HEAD/extension --out build/",
     "test:unit": "vitest run test/unit",
     "test:integration": "vitest run test/integration",
@@ -308,6 +310,7 @@
     "mocha": "^12.0.3",
     "ovsx": "^1.2.0",
     "playwright-core": "^1.63.0",
+    "prettier": "^3.9.9",
     "typescript": "^7.0.2",
     "vitest": "^5.0.3"
   },

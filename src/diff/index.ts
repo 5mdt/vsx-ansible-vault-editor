@@ -1,16 +1,22 @@
 // #AVE-0015: Open Decrypted Changes, and the opt-in `git diff` driver.
 
+import { readUtf8 } from "../vscode-util";
 import { execFile } from "node:child_process";
 import { copyFile, mkdir, readFile, writeFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import * as path from "node:path";
 import { promisify } from "node:util";
 import * as vscode from "vscode";
-import { RefusedError } from "../inline/edits";
+import { RefusedError } from "../errors";
 import type { SecretResolver } from "../secrets/resolver";
 import { decryptWithSecrets } from "../secrets/vault-ids";
 import { getBackend } from "../vault";
-import { CONFIG_KEYS, textconvCommand, withManagedAttributes, withoutManagedAttributes } from "./git-config";
+import {
+  CONFIG_KEYS,
+  textconvCommand,
+  withManagedAttributes,
+  withoutManagedAttributes,
+} from "./git-config";
 import { hasVaulted, plainView } from "./plain";
 
 const run = promisify(execFile);
@@ -71,7 +77,11 @@ interface Target {
 function targetOf(arg: unknown, staged: boolean): Target {
   let uri: vscode.Uri | undefined;
   if (arg instanceof vscode.Uri) uri = arg;
-  else if (arg && typeof arg === "object" && (arg as { resourceUri?: unknown }).resourceUri instanceof vscode.Uri) {
+  else if (
+    arg &&
+    typeof arg === "object" &&
+    (arg as { resourceUri?: unknown }).resourceUri instanceof vscode.Uri
+  ) {
     uri = (arg as { resourceUri: vscode.Uri }).resourceUri;
   } else uri = vscode.window.activeTextEditor?.document.uri;
   if (!uri) throw new RefusedError("open a file first");
@@ -94,7 +104,9 @@ async function folderFor(): Promise<vscode.WorkspaceFolder> {
   const folders = vscode.workspace.workspaceFolders ?? [];
   if (folders.length === 0) throw new RefusedError("open a folder first");
   if (folders.length === 1) return folders[0];
-  const pick = await vscode.window.showWorkspaceFolderPick({ placeHolder: "Repository" });
+  const pick = await vscode.window.showWorkspaceFolderPick({
+    placeHolder: "Repository",
+  });
   if (!pick) throw new RefusedError("cancelled");
   return pick;
 }
@@ -103,7 +115,9 @@ async function git(cwd: string, ...args: string[]): Promise<string> {
   try {
     return (await run("git", args, { cwd })).stdout.trim();
   } catch (e) {
-    throw new RefusedError(`git failed: ${e instanceof Error ? e.message.split("\n")[0] : String(e)}`);
+    throw new RefusedError(
+      `git failed: ${e instanceof Error ? e.message.split("\n")[0] : String(e)}`,
+    );
   }
 }
 
@@ -125,7 +139,10 @@ export interface DiffHandle {
 }
 
 // #AVE-0015
-export function registerDiff(context: vscode.ExtensionContext, resolver: SecretResolver): DiffHandle {
+export function registerDiff(
+  context: vscode.ExtensionContext,
+  resolver: SecretResolver,
+): DiffHandle {
   const content = new DiffContent();
   let counter = 0;
   context.subscriptions.push(
@@ -148,18 +165,24 @@ export function registerDiff(context: vscode.ExtensionContext, resolver: SecretR
       const file = target.file.fsPath;
       const [before, after] = target.staged
         ? [await showOrEmpty(repo, "HEAD", file), await showOrEmpty(repo, "", file)]
-        : [
-            await showOrEmpty(repo, "", file),
-            Buffer.from(await vscode.workspace.fs.readFile(target.file)).toString("utf8"),
-          ];
-      if (!hasVaulted(before) && !hasVaulted(after)) throw new RefusedError("nothing to decrypt in this change");
+        : [await showOrEmpty(repo, "", file), await readUtf8(target.file)];
+      if (!hasVaulted(before) && !hasVaulted(after))
+        throw new RefusedError("nothing to decrypt in this change");
       if (before === after) throw new RefusedError("no changes to show");
       const backend = getBackend();
       const decrypt = (c: string) => decryptWithSecrets(c, backend, resolver);
       const name = path.basename(file);
       const n = ++counter;
-      const left = vscode.Uri.from({ scheme: DIFF_SCHEME, path: `/${name}`, query: `side=before&n=${n}` });
-      const right = vscode.Uri.from({ scheme: DIFF_SCHEME, path: `/${name}`, query: `side=after&n=${n}` });
+      const left = vscode.Uri.from({
+        scheme: DIFF_SCHEME,
+        path: `/${name}`,
+        query: `side=before&n=${n}`,
+      });
+      const right = vscode.Uri.from({
+        scheme: DIFF_SCHEME,
+        path: `/${name}`,
+        query: `side=after&n=${n}`,
+      });
       content.put(left, await plainView(before, decrypt, "throw"));
       content.put(right, await plainView(after, decrypt, "throw"));
       await vscode.commands.executeCommand("vscode.diff", left, right, `${name} (decrypted)`);
@@ -189,13 +212,21 @@ export function registerDiff(context: vscode.ExtensionContext, resolver: SecretR
       const configured = cfg.get<string>("passwordFile") || undefined;
       const passwordFile = configured && path.resolve(cwd, configured);
       const shim = await installShim(context);
-      await git(cwd, "config", "--local", CONFIG_KEYS.textconv, textconvCommand(shim, passwordFile));
+      await git(
+        cwd,
+        "config",
+        "--local",
+        CONFIG_KEYS.textconv,
+        textconvCommand(shim, passwordFile),
+      );
       await git(cwd, "config", "--local", CONFIG_KEYS.cache, "false");
       const globs = cfg.get<string[]>("diffGlobs", ["*.yml", "*.yaml", "*.vault"]);
       const before = existsSync(attrs) ? await readFile(attrs, "utf8") : "";
       await mkdir(path.dirname(attrs), { recursive: true });
       await writeFile(attrs, withManagedAttributes(before, globs));
-      void vscode.window.showInformationMessage("Ansible Vault: git diff now shows decrypted content in this repository");
+      void vscode.window.showInformationMessage(
+        "Ansible Vault: git diff now shows decrypted content in this repository",
+      );
     },
 
     async disable() {
@@ -204,12 +235,16 @@ export function registerDiff(context: vscode.ExtensionContext, resolver: SecretR
       const attrs = await attributesFile(cwd);
       for (const key of [CONFIG_KEYS.textconv, CONFIG_KEYS.cache]) {
         // exit code 5 just means the key was not set
-        await run("git", ["config", "--local", "--unset-all", key], { cwd }).catch(() => {});
+        await run("git", ["config", "--local", "--unset-all", key], {
+          cwd,
+        }).catch(() => {});
       }
       if (existsSync(attrs)) {
         await writeFile(attrs, withoutManagedAttributes(await readFile(attrs, "utf8")));
       }
-      void vscode.window.showInformationMessage("Ansible Vault: git diff no longer decrypts in this repository");
+      void vscode.window.showInformationMessage(
+        "Ansible Vault: git diff no longer decrypts in this repository",
+      );
     },
   };
 }

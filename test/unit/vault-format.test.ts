@@ -30,9 +30,7 @@ const variants: [string, string | undefined][] = [
 function tamper(text: string, part: "hmac" | "ciphertext"): string {
   const lines = text.trim().split(/\r?\n/);
   const header = lines[0];
-  const inner = Buffer.from(lines.slice(1).join(""), "hex")
-    .toString("utf8")
-    .split("\n");
+  const inner = Buffer.from(lines.slice(1).join(""), "hex").toString("utf8").split("\n");
   const idx = part === "hmac" ? 1 : 2;
   const hex = inner[idx];
   inner[idx] = (hex[0] === "0" ? "1" : "0") + hex.slice(1);
@@ -67,9 +65,7 @@ describe("vault round-trip", () => {
 // AVE-0001
 describe("vault envelope shape", () => {
   it("1.1 header has no vault id", () => {
-    expect(encrypt("a", PASSWORD).split("\n")[0]).toBe(
-      "$ANSIBLE_VAULT;1.1;AES256",
-    );
+    expect(encrypt("a", PASSWORD).split("\n")[0]).toBe("$ANSIBLE_VAULT;1.1;AES256");
   });
 
   it("1.2 header carries the vault id", () => {
@@ -79,10 +75,7 @@ describe("vault envelope shape", () => {
   });
 
   it("wraps body at 80 characters, hex only", () => {
-    const lines = encrypt(Buffer.alloc(2000, "z"), PASSWORD)
-      .trim()
-      .split("\n")
-      .slice(1);
+    const lines = encrypt(Buffer.alloc(2000, "z"), PASSWORD).trim().split("\n").slice(1);
     expect(lines.length).toBeGreaterThan(1);
     for (const l of lines) {
       expect(l.length).toBeLessThanOrEqual(80);
@@ -137,21 +130,15 @@ describe("authentication failures", () => {
   });
 
   it("tampered ciphertext", () => {
-    expect(() => decrypt(tamper(text(), "ciphertext"), PASSWORD)).toThrow(
-      VaultAuthError,
-    );
+    expect(() => decrypt(tamper(text(), "ciphertext"), PASSWORD)).toThrow(VaultAuthError);
   });
 
   it("tampered HMAC", () => {
-    expect(() => decrypt(tamper(text(), "hmac"), PASSWORD)).toThrow(
-      VaultAuthError,
-    );
+    expect(() => decrypt(tamper(text(), "hmac"), PASSWORD)).toThrow(VaultAuthError);
   });
 
   it("message names both causes", () => {
-    expect(() => decrypt(text(), "nope")).toThrow(
-      /wrong password or corrupted vault/,
-    );
+    expect(() => decrypt(text(), "nope")).toThrow(/wrong password or corrupted vault/);
   });
 
   it("is not a format error", () => {
@@ -211,9 +198,7 @@ describe("malformed envelopes", () => {
   });
 
   it("header only", () => {
-    expect(code(() => decrypt("$ANSIBLE_VAULT;1.1;AES256\n", PASSWORD))).toBe(
-      "body",
-    );
+    expect(code(() => decrypt("$ANSIBLE_VAULT;1.1;AES256\n", PASSWORD))).toBe("body");
   });
 });
 

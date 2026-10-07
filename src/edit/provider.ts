@@ -1,8 +1,9 @@
 // #AVE-0008: ansible-vault: virtual documents. The plaintext lives only in this map.
 
+import { findOpenDocument, readUtf8 } from "../vscode-util";
 import * as path from "node:path";
 import * as vscode from "vscode";
-import { RefusedError } from "../inline/edits";
+import { RefusedError } from "../errors";
 import { inlineTargets } from "../inline/yaml-values";
 import { openEdit, saveEdit, type EditDeps, type EditSession } from "./session";
 
@@ -17,14 +18,10 @@ interface Entry {
 
 const decode = (b: Uint8Array) => Buffer.from(b).toString("utf8");
 
-async function readText(uri: vscode.Uri): Promise<string> {
-  return decode(await vscode.workspace.fs.readFile(uri));
-}
+const readText = readUtf8;
 
 function openDirtyDocument(uri: vscode.Uri): vscode.TextDocument | undefined {
-  return vscode.workspace.textDocuments.find(
-    (d) => d.uri.toString() === uri.toString() && d.isDirty,
-  );
+  return findOpenDocument(uri, { dirtyOnly: true });
 }
 
 // #AVE-0008
@@ -57,7 +54,11 @@ export class DecryptedFs implements vscode.FileSystemProvider, vscode.Disposable
         : `${path.basename(source.path)}.${(session.path ?? "value").replace(/[^\w.-]/g, "_")}.txt`;
     const params = new URLSearchParams({ src: source.toString() });
     if (session.path) params.set("block", session.path);
-    const uri = vscode.Uri.from({ scheme: SCHEME, path: `/${name}`, query: params.toString() });
+    const uri = vscode.Uri.from({
+      scheme: SCHEME,
+      path: `/${name}`,
+      query: params.toString(),
+    });
     this.entries.set(uri.toString(), {
       session,
       source,
@@ -80,7 +81,12 @@ export class DecryptedFs implements vscode.FileSystemProvider, vscode.Disposable
   stat(uri: vscode.Uri): vscode.FileStat {
     if (uri.path === "/") return { type: vscode.FileType.Directory, ctime: 0, mtime: 0, size: 0 };
     const e = this.entry(uri);
-    return { type: vscode.FileType.File, ctime: 0, mtime: e.mtime, size: e.content.length };
+    return {
+      type: vscode.FileType.File,
+      ctime: 0,
+      mtime: e.mtime,
+      size: e.content.length,
+    };
   }
 
   readDirectory(): [string, vscode.FileType][] {
@@ -110,7 +116,9 @@ export class DecryptedFs implements vscode.FileSystemProvider, vscode.Disposable
         throw vscode.FileSystemError.Unavailable("reloaded from disk; re-apply your edits");
       }
       if (choice !== "Overwrite") throw vscode.FileSystemError.Unavailable("save cancelled");
-      result = await saveEdit(e.session, plain, current, deps, { overwrite: true });
+      result = await saveEdit(e.session, plain, current, deps, {
+        overwrite: true,
+      });
     }
     if (result.conflict) throw vscode.FileSystemError.Unavailable("save cancelled");
     await vscode.workspace.fs.writeFile(e.source, Buffer.from(result.newSourceText, "utf8"));
@@ -128,7 +136,8 @@ export class DecryptedFs implements vscode.FileSystemProvider, vscode.Disposable
       const block = inlineTargets(current).targets.find(
         (t) => t.vault && t.path === e.session.path,
       );
-      if (!block) throw new RefusedError(`block "${e.session.path}" no longer exists in the source`);
+      if (!block)
+        throw new RefusedError(`block "${e.session.path}" no longer exists in the source`);
       offset = block.start;
     }
     const session = await openEdit(current, offset, this.deps());

@@ -18,13 +18,19 @@ function render(): string {
 // Decode an 8-bit RGBA PNG, any filter type.
 function decode(buf: Buffer): { w: number; h: number; px: Buffer } {
   expect(buf.subarray(0, 8).toString("hex")).toBe("89504e470d0a1a0a");
-  let w = 0, h = 0;
+  let w = 0,
+    h = 0;
   const idat: Buffer[] = [];
-  for (let o = 8; o < buf.length; ) {
+  for (let o = 8; o < buf.length;) {
     const len = buf.readUInt32BE(o);
     const tag = buf.toString("ascii", o + 4, o + 8);
     const body = buf.subarray(o + 8, o + 8 + len);
-    if (tag === "IHDR") { w = body.readUInt32BE(0); h = body.readUInt32BE(4); expect(body[8]).toBe(8); expect(body[9]).toBe(6); }
+    if (tag === "IHDR") {
+      w = body.readUInt32BE(0);
+      h = body.readUInt32BE(4);
+      expect(body[8]).toBe(8);
+      expect(body[9]).toBe(6);
+    }
     if (tag === "IDAT") idat.push(body);
     o += 12 + len;
   }
@@ -38,7 +44,9 @@ function decode(buf: Buffer): { w: number; h: number; px: Buffer } {
       const a = i >= 4 ? px[y * stride + i - 4] : 0;
       const b = y ? px[(y - 1) * stride + i] : 0;
       const c = y && i >= 4 ? px[(y - 1) * stride + i - 4] : 0;
-      const pa = Math.abs(b - c), pb = Math.abs(a - c), pc = Math.abs(a + b - 2 * c);
+      const pa = Math.abs(b - c),
+        pb = Math.abs(a - c),
+        pc = Math.abs(a + b - 2 * c);
       const paeth = pa <= pb && pa <= pc ? a : pb <= pc ? b : c;
       px[y * stride + i] = (x + [0, a, b, (a + b) >> 1, paeth][f]) & 255;
     }
@@ -61,7 +69,9 @@ describe("logo export", () => {
     expect([ico.readUInt16LE(0), ico.readUInt16LE(2), ico.readUInt16LE(4)]).toEqual([0, 1, 3]);
     const sizes = [0, 1, 2].map((i) => {
       const e = 6 + 16 * i;
-      const img = decode(ico.subarray(ico.readUInt32LE(e + 12), ico.readUInt32LE(e + 12) + ico.readUInt32LE(e + 8)));
+      const img = decode(
+        ico.subarray(ico.readUInt32LE(e + 12), ico.readUInt32LE(e + 12) + ico.readUInt32LE(e + 8)),
+      );
       expect(img.w).toBe(img.h);
       return img.w;
     });
@@ -70,7 +80,12 @@ describe("logo export", () => {
 
   // #AVE-0017
   it("fails on a missing source instead of writing output", () => {
-    const r = spawnSync("python3", ["-I", script, join(tmpdir(), "nope.pxo"), mkdtempSync(join(tmpdir(), "ave-logo-"))]);
+    const r = spawnSync("python3", [
+      "-I",
+      script,
+      join(tmpdir(), "nope.pxo"),
+      mkdtempSync(join(tmpdir(), "ave-logo-")),
+    ]);
     expect(r.status).not.toBe(0);
   });
 
@@ -95,7 +110,10 @@ with zipfile.ZipFile(sys.argv[1], "w") as z:
   function pixel(file: string) {
     const out = mkdtempSync(join(tmpdir(), "ave-logo-"));
     const r = spawnSync("python3", ["-I", script, file, out]);
-    return { status: r.status, png: r.status === 0 ? decode(readFileSync(join(out, "logo.png"))).px.subarray(0, 4) : null };
+    return {
+      status: r.status,
+      png: r.status === 0 ? decode(readFileSync(join(out, "logo.png"))).px.subarray(0, 4) : null,
+    };
   }
 
   // #AVE-0017

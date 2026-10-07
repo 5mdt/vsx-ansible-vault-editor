@@ -1,9 +1,10 @@
 // #AVE-0008: edit a vaulted file or block in memory; pure text in, text out.
 
-import { createHash } from "node:crypto";
-import { seal } from "../commands/session";
+import { detectEol, hashText } from "../util";
+import { seal } from "../vault/seal";
 import { fileVaultId } from "../detect";
-import { RefusedError } from "../inline/edits";
+import { RefusedError } from "../errors";
+import { applyTextEdits } from "../inline/edits";
 import { inlineTargets, scalarAt, vaultBlockText } from "../inline/yaml-values";
 import type { SecretResolver } from "../secrets/resolver";
 import { decryptWithSecrets } from "../secrets/vault-ids";
@@ -31,17 +32,12 @@ export type SaveResult =
   | { conflict: true; reason: "changed" };
 
 // #AVE-0008
-export function hashText(text: string): string {
-  return createHash("sha256").update(text, "utf8").digest("hex");
-}
-
-// #AVE-0008
 export async function openEdit(
   text: string,
   offset: number | undefined,
   deps: EditDeps,
 ): Promise<EditSession> {
-  const eol = text.includes("\r\n") ? "\r\n" : "\n";
+  const eol = detectEol(text);
   let ciphertext: string;
   let kind: "file" | "block";
   let path: string | undefined;
@@ -93,11 +89,17 @@ export async function saveEdit(
     const { targets, ok } = inlineTargets(currentSource);
     const block = ok ? targets.find((t) => t.vault && t.path === session.path) : undefined;
     if (!block) throw new RefusedError(`block "${session.path}" no longer exists in the source`);
-    newSourceText =
-      // #BUG-0011: reverse-sorted splice, copy-pasted five times; one applyTextEdits would do.
-      currentSource.slice(0, block.start) +
-      vaultBlockText(cipher, block.parentIndent, session.eol) +
-      currentSource.slice(block.end);
+    newSourceText = applyTextEdits(currentSource, [
+      {
+        start: block.start,
+        end: block.end,
+        newText: vaultBlockText(cipher, block.parentIndent, session.eol),
+      },
+    ]);
   }
-  return { conflict: false, newSourceText, newSourceHash: hashText(newSourceText) };
+  return {
+    conflict: false,
+    newSourceText,
+    newSourceHash: hashText(newSourceText),
+  };
 }

@@ -35,25 +35,42 @@ describe("rekey", () => {
   });
 
   it("rekeys every block and leaves other lines alone", async () => {
-    const source = blocks([["one", "first"], ["two", "second", "dev"], ["three", "third"]]);
+    const source = blocks([
+      ["one", "first"],
+      ["two", "second", "dev"],
+      ["three", "third"],
+    ]);
     const out = await rekeyText(source, { vaultId: "prod", secret: "new" }, deps());
     expect(out.count).toBe(3);
     expect(out.text.startsWith("head: 1\none: !vault |")).toBe(true);
     expect(out.text.endsWith("tail: 2\n")).toBe(true);
     const got = findVaultBlocks(out.text);
-    expect(got.map((b) => decrypt(b.ciphertext, "new").plaintext.toString())).toEqual(["first", "second", "third"]);
+    expect(got.map((b) => decrypt(b.ciphertext, "new").plaintext.toString())).toEqual([
+      "first",
+      "second",
+      "third",
+    ]);
     expect(got.every((b) => b.vaultId === "prod")).toBe(true);
     for (const b of got) expect(() => decrypt(b.ciphertext, "old")).toThrow(VaultAuthError);
   });
 
   it("one bad block aborts the whole edit", async () => {
-    const bad = encrypt("other", "different").trimEnd().split("\n").map((l) => "  " + l).join("\n");
+    const bad = encrypt("other", "different")
+      .trimEnd()
+      .split("\n")
+      .map((l) => "  " + l)
+      .join("\n");
     const source = blocks([["one", "first"]]).replace("tail: 2", `bad: !vault |\n${bad}\ntail: 2`);
-    await expect(rekeyText(source, { secret: "new" }, deps())).rejects.toBeInstanceOf(VaultAuthError);
+    await expect(rekeyText(source, { secret: "new" }, deps())).rejects.toBeInstanceOf(
+      VaultAuthError,
+    );
   });
 
   it("only the selected blocks change", async () => {
-    const source = blocks([["one", "first"], ["two", "second"]]);
+    const source = blocks([
+      ["one", "first"],
+      ["two", "second"],
+    ]);
     const all = findVaultBlocks(source);
     const out = await rekeyText(source, { vaultId: "prod", secret: "new" }, deps(), {
       blocks: (b) => selectBlocks(b, all[1].start + 2, all[1].start + 2),
@@ -65,7 +82,12 @@ describe("rekey", () => {
   });
 
   it("selection touching nothing selects all", () => {
-    const all = findVaultBlocks(blocks([["one", "a"], ["two", "b"]]));
+    const all = findVaultBlocks(
+      blocks([
+        ["one", "a"],
+        ["two", "b"],
+      ]),
+    );
     expect(selectBlocks(all, 0, 1)).toHaveLength(2);
   });
 
@@ -77,6 +99,9 @@ describe("rekey", () => {
 
   it("reports nothing to do for a plain file", async () => {
     expect(itemsIn("a: 1\n").kind).toBe("none");
-    expect(await rekeyText("a: 1\n", { secret: "n" }, deps())).toEqual({ text: "a: 1\n", count: 0 });
+    expect(await rekeyText("a: 1\n", { secret: "n" }, deps())).toEqual({
+      text: "a: 1\n",
+      count: 0,
+    });
   });
 });

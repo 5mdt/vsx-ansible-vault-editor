@@ -1,7 +1,7 @@
 // #AVE-0004: choose the vault ID on encrypt, find the right secret on decrypt.
 
 import type { VaultBackend } from "../vault/backend";
-import { parseEnvelope, VaultAuthError } from "../vault/format";
+import { readHeader, VaultAuthError } from "../vault/format";
 import { DEFAULT_LABEL } from "./ansible-cfg";
 import type { SecretResolver } from "./resolver";
 
@@ -91,7 +91,7 @@ export async function decryptWithSecrets(
   backend: VaultBackend,
   resolver: SecretResolver,
 ): Promise<Decrypted> {
-  const id = parseEnvelope(text).vaultId ?? DEFAULT_LABEL;
+  const id = readHeader(text).vaultId ?? DEFAULT_LABEL;
   const attempt = await tryKnownSecrets(text, backend, resolver, id);
   if (attempt.found) return attempt.found;
 
@@ -111,9 +111,7 @@ export async function decryptWithSecrets(
   }
 }
 
-export type QuietResult =
-  | ({ ok: true } & Decrypted)
-  | { ok: false; reason: "no-secret" | "wrong" };
+export type QuietResult = ({ ok: true } & Decrypted) | { ok: false; reason: "no-secret" | "wrong" };
 
 /** Like decryptWithSecrets but never prompts: for hovers and other passive reads. */
 // #AVE-0007
@@ -122,7 +120,7 @@ export async function decryptQuiet(
   backend: VaultBackend,
   resolver: SecretResolver,
 ): Promise<QuietResult> {
-  const id = parseEnvelope(text).vaultId ?? DEFAULT_LABEL;
+  const id = readHeader(text).vaultId ?? DEFAULT_LABEL;
   const attempt = await tryKnownSecrets(text, backend, resolver, id);
   if (attempt.found) return { ok: true, ...attempt.found };
   return { ok: false, reason: attempt.tried === 0 ? "no-secret" : "wrong" };

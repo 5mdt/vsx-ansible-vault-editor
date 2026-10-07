@@ -3,7 +3,12 @@ import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "no
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { CONFIG_KEYS, textconvCommand, withManagedAttributes, withoutManagedAttributes } from "../../src/diff/git-config";
+import {
+  CONFIG_KEYS,
+  textconvCommand,
+  withManagedAttributes,
+  withoutManagedAttributes,
+} from "../../src/diff/git-config";
 import { encrypt } from "../../src/vault/format";
 
 const root = join(__dirname, "..", "..");
@@ -13,7 +18,11 @@ let repo: string;
 let pwFile: string;
 
 const git = (...args: string[]) =>
-  execFileSync("git", args, { cwd: repo, stdio: ["ignore", "pipe", "pipe"], env: { ...process.env, GIT_PAGER: "cat" } }).toString();
+  execFileSync("git", args, {
+    cwd: repo,
+    stdio: ["ignore", "pipe", "pipe"],
+    env: { ...process.env, GIT_PAGER: "cat" },
+  }).toString();
 
 beforeAll(() => {
   execFileSync("npm", ["run", "bundle"], { cwd: root, stdio: "pipe" });
@@ -35,10 +44,18 @@ afterAll(() => rmSync(dir, { recursive: true, force: true }));
 // #AVE-0015
 describe.skipIf(!hasGit)("git diff driver", () => {
   const enable = (passwordFile?: string) => {
-    git("config", "--local", CONFIG_KEYS.textconv, textconvCommand(join(root, "build", "textconv.js"), passwordFile));
+    git(
+      "config",
+      "--local",
+      CONFIG_KEYS.textconv,
+      textconvCommand(join(root, "build", "textconv.js"), passwordFile),
+    );
     git("config", "--local", CONFIG_KEYS.cache, "false");
     const attrs = join(repo, ".git", "info", "attributes");
-    writeFileSync(attrs, withManagedAttributes(existsSync(attrs) ? readFileSync(attrs, "utf8") : "", ["*.yml"]));
+    writeFileSync(
+      attrs,
+      withManagedAttributes(existsSync(attrs) ? readFileSync(attrs, "utf8") : "", ["*.yml"]),
+    );
   };
 
   it("shows ciphertext before it is enabled", () => {
@@ -55,7 +72,12 @@ describe.skipIf(!hasGit)("git diff driver", () => {
   });
 
   it("still produces a diff with no usable secret", () => {
-    git("config", "--local", CONFIG_KEYS.textconv, textconvCommand(join(root, "build", "textconv.js"), join(dir, "missing")));
+    git(
+      "config",
+      "--local",
+      CONFIG_KEYS.textconv,
+      textconvCommand(join(root, "build", "textconv.js"), join(dir, "missing")),
+    );
     expect(git("diff")).toContain("$ANSIBLE_VAULT");
   });
 

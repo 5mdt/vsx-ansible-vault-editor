@@ -1,12 +1,11 @@
 import { describe, expect, it } from "vitest";
-import {
-  findAnsibleCfg,
-  parseIdentityList,
-  parseIni,
-} from "../../src/secrets/ansible-cfg";
+import { findAnsibleCfg, parseIdentityList, parseIni } from "../../src/secrets/ansible-cfg";
 
 const base = { workspaceRoot: "/ws", home: "/home/u" };
-const existing = (...paths: string[]) => (p: string) => paths.includes(p);
+const existing =
+  (...paths: string[]) =>
+  (p: string) =>
+    paths.includes(p);
 
 // #AVE-0003
 describe("ansible.cfg discovery", () => {
@@ -47,9 +46,7 @@ describe("ansible.cfg discovery", () => {
   });
 
   it("returns undefined when nothing exists", () => {
-    expect(findAnsibleCfg({ ...base, env: {}, exists: () => false })).toBe(
-      undefined,
-    );
+    expect(findAnsibleCfg({ ...base, env: {}, exists: () => false })).toBe(undefined);
   });
 
   it("works without a workspace", () => {
@@ -97,15 +94,11 @@ describe("vault_identity_list parsing", () => {
   });
 
   it("an entry without @ is the default label", () => {
-    expect(parseIdentityList("./pw.txt")).toEqual([
-      { label: "default", source: "./pw.txt" },
-    ]);
+    expect(parseIdentityList("./pw.txt")).toEqual([{ label: "default", source: "./pw.txt" }]);
   });
 
   it("keeps the source `prompt`", () => {
-    expect(parseIdentityList("prod@prompt")).toEqual([
-      { label: "prod", source: "prompt" },
-    ]);
+    expect(parseIdentityList("prod@prompt")).toEqual([{ label: "prod", source: "prompt" }]);
   });
 
   it("is empty for an empty list", () => {

@@ -9,7 +9,8 @@ import { secretForEncrypt } from "../secrets/vault-ids";
 import { decryptForBuffer } from "../transparent/open";
 import { planSave, type SealCache } from "../transparent/seal";
 import { getBackend } from "../vault";
-import { eolOf, isYamlDocument, replaceWholeDocument } from "../vscode-util";
+import { errorMessage, MAX_SCAN } from "../util";
+import { eolOf, globMatch, isYamlDocument, readUtf8, replaceWholeDocument } from "../vscode-util";
 import {
   decideSave,
   guardButtons,
@@ -18,23 +19,26 @@ import {
   type GuardMode,
   type Snapshot,
 } from "./snapshot";
+import {
+  afterEncrypt,
+  answerDialog,
+  closeDialog,
+  hold,
+  initialFlags,
+  openDialog,
+  planStep,
+  settleHeld,
+  takeRestore,
+  type GuardFlags,
+} from "./state";
 
-// #BUG-0013: MAX_SCAN is defined in four files.
-const MAX_SCAN = 1_000_000;
 const AUTOSAVE_WARNED = "ansibleVault.autoSaveWarned";
 
 interface DocState {
   snap: Snapshot;
   cache: SealCache;
-  /** A dialog is open for this document. */
-  pending: boolean;
-  /** The dialog's answer, consumed by the next save. */
-  allow?: "plain" | "encrypt";
-  /** Plaintext to put back once the save has written safe bytes. */
-  restore?: string;
-  held: boolean;
-  /** Rekeyed disk text to write on the next save instead of the buffer (#AVE-0009). */
-  override?: string;
+  /** The transition flags; changed only through ./state (#AVE-0011). */
+  flags: GuardFlags;
 }
 
 export interface GuardHandle {
@@ -59,7 +63,6 @@ function wholeRange(doc: vscode.TextDocument): vscode.Range {
 }
 
 // #AVE-0011
-// #BUG-0017: a 190-line closure with five mutable per-document flags (pending, allow, restore, held, override); extract the transitions into a pure module.
 export function registerSaveGuard(
   context: vscode.ExtensionContext,
   resolver: SecretResolver,
@@ -71,13 +74,11 @@ export function registerSaveGuard(
   const stateOf = (doc: vscode.TextDocument): DocState => {
     let st = states.get(key(doc));
     if (!st) {
-      st = { snap: snapshot(doc.getText()), cache: new Map(), pending: false, held: false };
+      st = { snap: snapshot(doc.getText()), cache: new Map(), flags: initialFlags() };
       states.set(key(doc), st);
     }
     return st;
   };
-  const globMatch = (doc: vscode.TextDocument, globs: string[]) =>
-    globs.some((pattern) => vscode.languages.match({ pattern }, doc) > 0);
   const secretFor = async (id: string | undefined) =>
     (await resolver.candidates(id ?? DEFAULT_LABEL))[0];
 
@@ -125,29 +126,19 @@ export function registerSaveGuard(
   const safeText = async (doc: vscode.TextDocument, st: DocState): Promise<string | undefined> => {
     // #BUG-0007: inlineTargets is memoized, so reasons and plan share one parse; `plain` skips the reasons.
     const text = doc.getText();
-    if (st.override !== undefined) {
-      const rekeyed = st.override;
-      st.override = undefined;
-      st.restore = text;
-      return rekeyed;
-    }
     const { mode, transparent, globs, defaultVaultId } = settings();
-    let decision: "save" | "encrypt" | "dialog";
     const glob = globMatch(doc, globs);
-    if (st.allow === "plain") {
-      st.allow = undefined;
-      return undefined;
-    }
-    const reasons = guardReasons(text, st.snap, glob);
-    if (st.allow === "encrypt") {
-      st.allow = undefined;
-      decision = reasons.length ? "encrypt" : "save";
-    } else {
-      decision = decideSave(reasons, mode, transparent);
-    }
-    if (decision === "save") return undefined;
+    const step = planStep(st.flags, {
+      text,
+      mode,
+      transparent,
+      reasons: () => guardReasons(text, st.snap, glob),
+    });
+    st.flags = step.flags;
+    if (step.kind === "write") return step.text;
+    if (step.kind === "buffer") return undefined;
     warnAboutAutoSave();
-    if (decision === "encrypt") {
+    if (step.kind === "encrypt") {
       try {
         const plan = await planSave(text, st.snap, glob, st.cache, {
           backend: getBackend(),
@@ -158,7 +149,7 @@ export function registerSaveGuard(
         if (plan.ok) {
           st.cache = plan.cache;
           st.snap = snapshot(plan.newText);
-          if (transparent) st.restore = text;
+          st.flags = afterEncrypt(st.flags, text, transparent);
           return plan.newText;
         }
         void vscode.window
@@ -171,24 +162,23 @@ export function registerSaveGuard(
           });
       } catch (e) {
         void vscode.window.showErrorMessage(
-          `Ansible Vault: ${e instanceof Error ? e.message : String(e)}; nothing was written.`,
+          `Ansible Vault: ${errorMessage(e)}; nothing was written.`,
         );
       }
     }
     // Hold: write what is already on disk, ask afterwards.
     let disk = "";
     try {
-      disk = Buffer.from(await vscode.workspace.fs.readFile(doc.uri)).toString("utf8");
+      disk = await readUtf8(doc.uri);
     } catch {
       // a file that does not exist yet has nothing to preserve
     }
-    st.restore = text;
-    if (decision === "dialog") st.held = true;
+    st.flags = hold(st.flags, text, step.kind === "hold" ? step.decision : "encrypt");
     return disk;
   };
 
   const ask = async (doc: vscode.TextDocument, st: DocState) => {
-    st.pending = true;
+    st.flags = openDialog(st.flags);
     try {
       const { mode } = settings();
       const buttons = guardButtons(mode);
@@ -197,12 +187,12 @@ export function registerSaveGuard(
         { modal: true },
         ...buttons,
       );
-      if (pick === "Re-encrypt and save") st.allow = "encrypt";
-      else if (pick === "Save anyway") st.allow = "plain";
-      else return;
+      const answer = answerDialog(st.flags, pick);
+      st.flags = answer.flags;
+      if (!answer.save) return;
       await doc.save();
     } finally {
-      st.pending = false;
+      st.flags = closeDialog(st.flags);
     }
   };
 
@@ -222,17 +212,12 @@ export function registerSaveGuard(
     vscode.workspace.onDidSaveTextDocument(async (doc) => {
       const st = states.get(key(doc));
       if (!st) return;
-      if (st.restore !== undefined) {
-        const text = st.restore;
-        st.restore = undefined;
-        await replaceWholeDocument(doc, text);
-      }
-      if (st.held && !st.pending) {
-        st.held = false;
-        void ask(doc, st);
-      } else if (st.held) {
-        st.held = false;
-      }
+      const restored = takeRestore(st.flags);
+      st.flags = restored.flags;
+      if (restored.text !== undefined) await replaceWholeDocument(doc, restored.text);
+      const settled = settleHeld(st.flags);
+      st.flags = settled.flags;
+      if (settled.ask) void ask(doc, st);
     }),
   );
   for (const doc of vscode.workspace.textDocuments) void openTransparent(doc);
@@ -249,7 +234,7 @@ export function registerSaveGuard(
         await vscode.workspace.fs.writeFile(doc.uri, Buffer.from(diskText, "utf8"));
         return;
       }
-      st.override = diskText;
+      st.flags = { ...st.flags, override: diskText };
       await doc.save();
     },
   };

@@ -16,20 +16,13 @@ export function getBackend(): VaultBackend {
 // #AVE-0002
 export async function handleBackendError(e: unknown): Promise<boolean> {
   if (!(e instanceof CliNotFoundError)) return false;
-  const pick = await vscode.window.showErrorMessage(
-    e.message,
-    "Switch to native",
-    "Open settings",
-  );
+  const pick = await vscode.window.showErrorMessage(e.message, "Switch to native", "Open settings");
   if (pick === "Switch to native") {
     await vscode.workspace
       .getConfiguration("ansibleVault")
       .update("backend", "native", vscode.ConfigurationTarget.Global);
   } else if (pick === "Open settings") {
-    await vscode.commands.executeCommand(
-      "workbench.action.openSettings",
-      "ansibleVault.backend",
-    );
+    await vscode.commands.executeCommand("workbench.action.openSettings", "ansibleVault.backend");
   }
   return true;
 }

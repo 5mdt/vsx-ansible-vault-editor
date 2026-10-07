@@ -40,9 +40,7 @@ export async function readSource(o: ReadSourceOptions): Promise<string> {
   let secret: string;
   if (await isExecutable(o.path)) {
     if (!o.trusted) {
-      throw new SourceError(
-        `${o.path}: not run, the workspace is untrusted`,
-      );
+      throw new SourceError(`${o.path}: not run, the workspace is untrusted`);
     }
     const args = isClientScript(o.path) ? ["--vault-id", o.label] : [];
     let res;

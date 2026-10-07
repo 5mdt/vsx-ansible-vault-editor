@@ -1,15 +1,15 @@
 // #AVE-0009: rekey a document's vaulted file or blocks in memory; pure text in, text out.
 
+import { detectEol, errorMessage } from "../util";
 import { fileVaultId, findVaultBlocks, type VaultBlock } from "../detect";
+import { applyTextEdits, type TextEdit } from "../inline/edits";
 import { vaultBlockText } from "../inline/yaml-values";
-import { seal } from "../commands/session";
+import { seal } from "../vault/seal";
 import type { Decrypted } from "../secrets/vault-ids";
 import type { VaultBackend } from "../vault/backend";
 
 export type Items =
-  | { kind: "file"; vaultId?: string }
-  | { kind: "blocks"; blocks: VaultBlock[] }
-  | { kind: "none" };
+  { kind: "file"; vaultId?: string } | { kind: "blocks"; blocks: VaultBlock[] } | { kind: "none" };
 
 export interface RekeyTarget {
   /** Undefined writes a 1.1 header without an ID. */
@@ -49,10 +49,17 @@ export async function rekeyText(
   text: string,
   target: RekeyTarget,
   deps: RekeyDeps,
-  opts: { blocks?: (all: VaultBlock[]) => VaultBlock[]; eol?: "\n" | "\r\n" } = {},
+  opts: {
+    blocks?: (all: VaultBlock[]) => VaultBlock[];
+    eol?: "\n" | "\r\n";
+  } = {},
 ): Promise<RekeyResult> {
-  const eol = opts.eol ?? (text.includes("\r\n") ? "\r\n" : "\n");
-  const session = { backend: deps.backend, vaultId: target.vaultId, secret: target.secret };
+  const eol = opts.eol ?? detectEol(text);
+  const session = {
+    backend: deps.backend,
+    vaultId: target.vaultId,
+    secret: target.secret,
+  };
   const items = itemsIn(text);
   if (items.kind === "none") return { text, count: 0 };
   if (items.kind === "file") {
@@ -64,15 +71,18 @@ export async function rekeyText(
   for (const b of chosen) plains.push((await deps.decrypt(b.ciphertext)).plaintext);
   const sealed: string[] = [];
   for (const p of plains) sealed.push(await seal(session, p, eol));
-  let out = text;
+  const edits: TextEdit[] = [];
   chosen
     .map((b, i) => ({ b, cipher: sealed[i] }))
     .sort((x, y) => y.b.start - x.b.start)
     .forEach(({ b, cipher }) => {
-      // #BUG-0011: reverse-sorted splice, copy-pasted five times; one applyTextEdits would do.
-      out = out.slice(0, b.start) + vaultBlockText(cipher, b.parentIndent, eol) + out.slice(b.end);
+      edits.push({
+        start: b.start,
+        end: b.end,
+        newText: vaultBlockText(cipher, b.parentIndent, eol),
+      });
     });
-  return { text: out, count: chosen.length };
+  return { text: applyTextEdits(text, edits), count: chosen.length };
 }
 
 export interface FileInput {
@@ -92,7 +102,11 @@ export async function rekeyMany(
   files: FileInput[],
   target: RekeyTarget,
   deps: RekeyDeps,
-  opts: { idFilter?: string; cancelled?: () => boolean; onFile?: (id: string) => void } = {},
+  opts: {
+    idFilter?: string;
+    cancelled?: () => boolean;
+    onFile?: (id: string) => void;
+  } = {},
 ): Promise<WorkspaceResult> {
   const result: WorkspaceResult = { applied: [], failed: [], cancelled: false };
   for (const f of files) {
@@ -103,11 +117,15 @@ export async function rekeyMany(
       const items = itemsIn(f.text);
       if (only !== undefined && items.kind === "file" && (items.vaultId ?? "") !== only) continue;
       const out = await rekeyText(f.text, target, deps, {
-        blocks: only === undefined ? undefined : (all) => all.filter((b) => (b.vaultId ?? "") === only),
+        blocks:
+          only === undefined ? undefined : (all) => all.filter((b) => (b.vaultId ?? "") === only),
       });
       if (out.count) result.applied.push({ id: f.id, text: out.text, count: out.count });
     } catch (e) {
-      result.failed.push({ id: f.id, reason: e instanceof Error ? e.message : String(e) });
+      result.failed.push({
+        id: f.id,
+        reason: errorMessage(e),
+      });
     }
   }
   return result;

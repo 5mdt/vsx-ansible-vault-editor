@@ -1,6 +1,14 @@
 # Changelog
 
 ## Unreleased
+- #BUG-0014: shared `RefusedError` and `seal()` moved out of `inline/` and `commands/` into `src/errors.ts` and `src/vault/seal.ts`
+- #BUG-0012: one vault header parser (`src/vault/header.ts`); reading a vault ID no longer decodes the body, and `fileVaultId` no longer requires the `AES256` cipher
+- #BUG-0011: one `applyTextEdits` replaces five copies of the reverse-sorted splice; overlapping edits no longer duplicate text
+- #BUG-0013: duplicated helpers (`MAX_SCAN`, EOL detection, hashing, line bounds, glob matching, open-document and UTF-8 reads) consolidated into `src/util.ts` and `src/vscode-util.ts`
+- #BUG-0016: command-layer duplication removed (failure reporting, `decryptAllInFile`, vault ID pickers)
+- #BUG-0015: removed dead `textHash` and `VaultBackend.rekey` and the "not implemented" command fallback; a unit test checks `package.json` commands against the registered handlers
+- #BUG-0017: the save guard's state transitions are a pure, unit-tested module (`src/guard/state.ts`)
+- #BUG-0018: Prettier formats `src/` and `test/` (`make fmt`); `make lint` fails on unformatted code
 
 ## v1.1.0 (2026-10-07)
 - Rekey Workspace scan reads files in parallel and skips binaries cheaply.

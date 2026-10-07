@@ -110,7 +110,7 @@ describe("locating scalars", () => {
     "list:",
     "  - first",
     "  - key: nested",
-    "quoted: \"a: b\"",
+    'quoted: "a: b"',
     "",
   ].join("\n");
 
@@ -187,7 +187,8 @@ describe("duplicate keys and large maps", () => {
   });
 
   it("is roughly linear on a large flat map", () => {
-    const make = (n: number) => Array.from({ length: n }, (_, i) => `key${i}: value${i}\n`).join("");
+    const make = (n: number) =>
+      Array.from({ length: n }, (_, i) => `key${i}: value${i}\n`).join("");
     const time = (n: number) => {
       const t = make(n);
       const s = performance.now();

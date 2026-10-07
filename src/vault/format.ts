@@ -10,6 +10,7 @@ import {
   timingSafeEqual,
 } from "node:crypto";
 import { promisify } from "node:util";
+import { VAULT_MAGIC, parseHeader, type VaultHeader } from "./header";
 
 export type VaultVersion = "1.1" | "1.2";
 
@@ -48,7 +49,7 @@ export interface EncryptOptions {
   salt?: Buffer;
 }
 
-const MAGIC = "$ANSIBLE_VAULT";
+const MAGIC = VAULT_MAGIC;
 const CIPHER = "AES256";
 const ITERATIONS = 10000;
 const WRAP = 80;
@@ -94,19 +95,23 @@ function unpad(data: Buffer): Buffer {
   return data.subarray(0, data.length - n);
 }
 
-// #AVE-0001
-export function parseEnvelope(text: string): Envelope {
-  const lines = text.split(/\r?\n/).map((l) => l.trim());
-  const parts = (lines[0] ?? "").split(";");
-  const [magic, version, cipher, vaultId] = parts;
-  if (
-    magic !== MAGIC ||
-    (version !== "1.1" && version !== "1.2") ||
-    cipher === undefined ||
-    (version === "1.1" ? parts.length !== 3 : parts.length !== 4)
-  ) {
+/** Header only (no body decode); throws `VaultFormatError("header")` if it is not an envelope. */
+// #AVE-0001, #AVE-0004
+export function readHeader(text: string): VaultHeader {
+  const header = parseHeader(text);
+  if (header === undefined) {
     throw new VaultFormatError("header", "not an ansible-vault envelope");
   }
+  return header;
+}
+
+// #AVE-0001
+export function parseEnvelope(text: string): Envelope {
+  const { version, cipher, vaultId, wellFormed } = readHeader(text);
+  if (!wellFormed) {
+    throw new VaultFormatError("header", "not an ansible-vault envelope");
+  }
+  const lines = text.split(/\r?\n/).map((l) => l.trim());
   if (cipher !== CIPHER) {
     throw new VaultFormatError("cipher", `unsupported cipher: ${cipher}`);
   }
@@ -121,7 +126,7 @@ export function parseEnvelope(text: string): Envelope {
   return {
     version,
     cipher,
-    vaultId: version === "1.2" ? vaultId : undefined,
+    vaultId,
     salt: strictHex(inner[0], "salt"),
     hmac: strictHex(inner[1], "hmac"),
     ciphertext: strictHex(inner[2], "ciphertext"),
@@ -156,17 +161,11 @@ function seal(plaintext: Buffer | string, salt: Buffer, keys: Keys, opts: Encryp
 function openEnvelope(env: Envelope, keys: Keys): { plaintext: Buffer; vaultId?: string } {
   const { cipherKey, hmacKey, iv } = keys;
   const expected = createHmac("sha256", hmacKey).update(env.ciphertext).digest();
-  if (
-    expected.length !== env.hmac.length ||
-    !timingSafeEqual(expected, env.hmac)
-  ) {
+  if (expected.length !== env.hmac.length || !timingSafeEqual(expected, env.hmac)) {
     throw new VaultAuthError();
   }
   const decipher = createDecipheriv("aes-256-ctr", cipherKey, iv);
-  const padded = Buffer.concat([
-    decipher.update(env.ciphertext),
-    decipher.final(),
-  ]);
+  const padded = Buffer.concat([decipher.update(env.ciphertext), decipher.final()]);
   return { plaintext: unpad(padded), vaultId: env.vaultId };
 }
 
@@ -195,10 +194,7 @@ export async function encryptAsync(
 
 /** Synchronous; blocks for about 15 ms. Prefer `decryptAsync` on the extension host. */
 // #AVE-0001
-export function decrypt(
-  text: string,
-  password: string,
-): { plaintext: Buffer; vaultId?: string } {
+export function decrypt(text: string, password: string): { plaintext: Buffer; vaultId?: string } {
   const env = parseEnvelope(text);
   return openEnvelope(env, deriveKeys(password, env.salt));
 }

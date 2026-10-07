@@ -63,7 +63,11 @@ export type SaveDecision = "save" | "encrypt" | "dialog";
 
 /** Transparent mode encrypts marked items silently; anything else guarded goes to the dialog. */
 // #AVE-0011, #AVE-0013
-export function decideSave(reasons: GuardReason[], mode: GuardMode, transparent: boolean): SaveDecision {
+export function decideSave(
+  reasons: GuardReason[],
+  mode: GuardMode,
+  transparent: boolean,
+): SaveDecision {
   if (!reasons.length) return "save";
   if (transparent && reasons.every((r) => r === "marker")) return "encrypt";
   return guardAction(reasons, mode);

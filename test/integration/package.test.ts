@@ -11,10 +11,14 @@ describe("bundled extension", () => {
 
   beforeAll(() => {
     execFileSync("npm", ["run", "bundle"], { cwd: root, stdio: "pipe" });
-    listed = execFileSync("npx", ["vsce", "ls", "--no-dependencies", "--readme-path", "extension/README.md"], {
-      cwd: root,
-      stdio: ["ignore", "pipe", "pipe"],
-    })
+    listed = execFileSync(
+      "npx",
+      ["vsce", "ls", "--no-dependencies", "--readme-path", "extension/README.md"],
+      {
+        cwd: root,
+        stdio: ["ignore", "pipe", "pipe"],
+      },
+    )
       .toString()
       .split("\n")
       .map((l) => l.trim())

@@ -4,17 +4,11 @@ import { describe, expect, it } from "vitest";
 
 const root = join(__dirname, "..", "..");
 const pkg = JSON.parse(readFileSync(join(root, "package.json"), "utf8"));
-const doc = readFileSync(
-  join(root, "docs/features/AVE-0014-keybindings.md"),
-  "utf8",
-);
+const doc = readFileSync(join(root, "docs/features/AVE-0014-keybindings.md"), "utf8");
 
 // First column of the command table in the feature doc is the contract.
-const documented = [...doc.matchAll(/^\| `(ansibleVault\.[A-Za-z]+)`/gm)].map(
-  (m) => m[1],
-);
-const contributed: { command: string; title?: string }[] =
-  pkg.contributes.commands;
+const documented = [...doc.matchAll(/^\| `(ansibleVault\.[A-Za-z]+)`/gm)].map((m) => m[1]);
+const contributed: { command: string; title?: string }[] = pkg.contributes.commands;
 
 // AVE-0014
 describe("keybindings contract", () => {
@@ -29,9 +23,7 @@ describe("keybindings contract", () => {
   });
 
   it("contributes no command missing from the doc table", () => {
-    const extra = contributed
-      .map((c) => c.command)
-      .filter((id) => !documented.includes(id));
+    const extra = contributed.map((c) => c.command).filter((id) => !documented.includes(id));
     expect(extra).toEqual([]);
   });
 

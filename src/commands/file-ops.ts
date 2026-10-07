@@ -1,9 +1,10 @@
 // #AVE-0005: whole-file encrypt and decrypt as pure text operations.
 
 import { fileVaultId } from "../detect";
-import { RefusedError } from "../inline/edits";
+import { RefusedError } from "../errors";
 import { decryptWithSecrets } from "../secrets/vault-ids";
-import { seal, type EncryptSession, type OpsDeps } from "./session";
+import { seal, type EncryptSession } from "../vault/seal";
+import type { OpsDeps } from "./session";
 
 export type FileOp = "encrypt" | "decrypt" | "toggle";
 export type FilePlan = "encrypt" | "decrypt" | { refused: string };

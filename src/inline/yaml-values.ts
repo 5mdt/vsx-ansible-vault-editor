@@ -1,5 +1,6 @@
 // #AVE-0006: locate and format YAML scalar values with a parser that keeps source ranges.
 
+import { lineStart } from "../util";
 import {
   isAlias,
   isMap,
@@ -10,6 +11,7 @@ import {
   Scalar,
   type Node,
 } from "yaml";
+import { parseHeader } from "../vault/header";
 
 /** A value scalar or `!vault` block, with the range an edit should replace. */
 export interface ValueTarget {
@@ -26,10 +28,6 @@ export interface ValueTarget {
   path: string;
 }
 
-function lineStart(text: string, offset: number): number {
-  return offset === 0 ? 0 : text.lastIndexOf("\n", offset - 1) + 1;
-}
-
 function trimEol(text: string, end: number): number {
   while (end > 0 && (text[end - 1] === "\n" || text[end - 1] === "\r")) end--;
   return end;
@@ -40,17 +38,15 @@ function dashColumn(text: string, offset: number): number {
   const ls = lineStart(text, offset);
   const prefix = text.slice(ls, offset);
   for (let i = prefix.length - 1; i >= 0; i--) {
-    if (prefix[i] === "-" && /^[\s-]*$/.test(prefix.slice(0, i)) && /\s/.test(prefix[i + 1] ?? "")) {
+    if (
+      prefix[i] === "-" &&
+      /^[\s-]*$/.test(prefix.slice(0, i)) &&
+      /\s/.test(prefix[i + 1] ?? "")
+    ) {
       return i;
     }
   }
   return /^ */.exec(text.slice(ls))![0].length;
-}
-
-// #BUG-0012: one of four places that parse the vault header.
-function header(ciphertext: string): string | undefined {
-  const parts = ciphertext.split(/\r?\n/, 1)[0].trim().split(";");
-  return parts[0] === "$ANSIBLE_VAULT" && parts[1] === "1.2" ? parts[3] : undefined;
 }
 
 function scalarTarget(
@@ -71,7 +67,7 @@ function scalarTarget(
       value: "",
       vault: true,
       ciphertext,
-      vaultId: header(ciphertext),
+      vaultId: parseHeader(ciphertext)?.vaultId,
       parentIndent,
       path,
     };
@@ -79,8 +75,7 @@ function scalarTarget(
   const end = trimEol(text, node.type?.startsWith("BLOCK") ? nodeEnd : valueEnd);
   if (end <= from) return undefined;
   const source = text.slice(from, end);
-  const value =
-    node.type === "PLAIN" && !source.includes("\n") ? source : String(node.value);
+  const value = node.type === "PLAIN" && !source.includes("\n") ? source : String(node.value);
   return { start: from, end, value, vault: false, parentIndent, path };
 }
 
@@ -105,7 +100,10 @@ export function inlineTargets(text: string): Targets {
 function parseTargets(text: string): Targets {
   const targets: ValueTarget[] = [];
   // #BUG-0006: yaml's duplicate-key check is quadratic on big flat maps, so it is off; duplicates are accepted.
-  const docs = parseAllDocuments(text, { logLevel: "silent", uniqueKeys: false });
+  const docs = parseAllDocuments(text, {
+    logLevel: "silent",
+    uniqueKeys: false,
+  });
 
   const walk = (node: Node | null | undefined, path: string, indent: number): void => {
     if (!node || isAlias(node)) return;
@@ -184,11 +182,7 @@ function roundTrips(candidate: string, plain: string, indent: number): boolean {
 }
 
 // #AVE-0006
-export function formatScalar(
-  plain: string,
-  parentIndent: number,
-  eol: "\n" | "\r\n",
-): string {
+export function formatScalar(plain: string, parentIndent: number, eol: "\n" | "\r\n"): string {
   const multiline = plain.includes("\n");
   if (!multiline && plain !== "" && roundTrips(plain, plain, parentIndent)) return plain;
   if (multiline) {

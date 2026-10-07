@@ -54,7 +54,8 @@ describe("native backend", () => {
 
   it("rekey opens only with the new password", async () => {
     const text = await b.encrypt("data", PASSWORD);
-    const re = await b.rekey(text, PASSWORD, "new-pw");
+    const { plaintext, vaultId } = await b.decrypt(text, PASSWORD);
+    const re = await b.encrypt(plaintext, "new-pw", { vaultId });
     expect((await b.decrypt(re, "new-pw")).plaintext.toString()).toBe("data");
     await expect(b.decrypt(re, PASSWORD)).rejects.toThrow(VaultAuthError);
   });
@@ -80,19 +81,14 @@ describe("cli backend secret handling", () => {
   it("password file is removed when the runner throws", async () => {
     const { run, seen } = recorder(new Error("boom"));
     await expect(
-      new CliBackend("ansible-vault", run).decrypt(
-        "$ANSIBLE_VAULT;1.1;AES256\n00\n",
-        PASSWORD,
-      ),
+      new CliBackend("ansible-vault", run).decrypt("$ANSIBLE_VAULT;1.1;AES256\n00\n", PASSWORD),
     ).rejects.toThrow("boom");
     expect(existsSync(seen[0].path)).toBe(false);
   });
 
   it("password file is removed on non-zero exit, error omits the secret", async () => {
     const { run, seen } = recorder({ code: 1, stdout: Buffer.alloc(0), stderr: "bad" });
-    const err = await new CliBackend("ansible-vault", run)
-      .encrypt("x", PASSWORD)
-      .catch((e) => e);
+    const err = await new CliBackend("ansible-vault", run).encrypt("x", PASSWORD).catch((e) => e);
     expect(err).toBeInstanceOf(CliError);
     expect(String(err.message)).not.toContain(PASSWORD);
     expect(existsSync(seen[0].path)).toBe(false);
@@ -126,10 +122,7 @@ describe("cli backend secret handling", () => {
       stderr: "[ERROR]: Decryption failed (no vault secrets were found that could decrypt).",
     });
     await expect(
-      new CliBackend("ansible-vault", run).decrypt(
-        "$ANSIBLE_VAULT;1.1;AES256\n00\n",
-        PASSWORD,
-      ),
+      new CliBackend("ansible-vault", run).decrypt("$ANSIBLE_VAULT;1.1;AES256\n00\n", PASSWORD),
     ).rejects.toThrow(VaultAuthError);
   });
 
@@ -138,9 +131,9 @@ describe("cli backend secret handling", () => {
     const run: Runner = async () => {
       throw enoent;
     };
-    await expect(
-      new CliBackend("nope", run).encrypt("x", PASSWORD),
-    ).rejects.toThrow(CliNotFoundError);
+    await expect(new CliBackend("nope", run).encrypt("x", PASSWORD)).rejects.toThrow(
+      CliNotFoundError,
+    );
   });
 
   it("converts CLI output to the requested EOL", async () => {

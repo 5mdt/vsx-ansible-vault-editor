@@ -1,9 +1,19 @@
 import { describe, expect, it } from "vitest";
-import { decideSave, guardAction, guardButtons, guardReasons, snapshot } from "../../src/guard/snapshot";
+import {
+  decideSave,
+  guardAction,
+  guardButtons,
+  guardReasons,
+  snapshot,
+} from "../../src/guard/snapshot";
 import { encrypt } from "../../src/vault/format";
 
 const block = (plain: string) =>
-  `k: !vault |\n${encrypt(plain, "pw").trimEnd().split("\n").map((l) => "  " + l).join("\n")}\n`;
+  `k: !vault |\n${encrypt(plain, "pw")
+    .trimEnd()
+    .split("\n")
+    .map((l) => "  " + l)
+    .join("\n")}\n`;
 
 // #AVE-0011
 describe("save guard", () => {
@@ -27,8 +37,12 @@ describe("save guard", () => {
 
   it("guards by glob and by marker", () => {
     expect(guardReasons("a: 1\n", snapshot("a: 1\n"), true)).toEqual(["glob"]);
-    expect(guardReasons("a: 1 # ansible-vault: encrypt\n", snapshot("a: 1\n"), false)).toEqual(["marker"]);
-    expect(guardReasons("# ansible-vault: encrypt\na: 1\n", snapshot("a: 1\n"), false)).toEqual(["marker"]);
+    expect(guardReasons("a: 1 # ansible-vault: encrypt\n", snapshot("a: 1\n"), false)).toEqual([
+      "marker",
+    ]);
+    expect(guardReasons("# ansible-vault: encrypt\na: 1\n", snapshot("a: 1\n"), false)).toEqual([
+      "marker",
+    ]);
   });
 
   it("maps the setting to an action and buttons", () => {
@@ -44,7 +58,13 @@ describe("save guard", () => {
     const text = block("s3cret");
     const snap = snapshot(text);
     expect(guardReasons("k: s3cret # ansible-vault: encrypt\n", snap, false)).toEqual(["marker"]);
-    expect(guardReasons("# ansible-vault: encrypt\nk: s3cret\n", snapshot(encrypt("k: s3cret\n", "pw")), true)).toEqual(["marker"]);
+    expect(
+      guardReasons(
+        "# ansible-vault: encrypt\nk: s3cret\n",
+        snapshot(encrypt("k: s3cret\n", "pw")),
+        true,
+      ),
+    ).toEqual(["marker"]);
   });
 
   it("decides: transparent encrypts markers silently, otherwise the dialog", () => {

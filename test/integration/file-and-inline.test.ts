@@ -82,9 +82,7 @@ describe.skipIf(!hasAnsible)("inline blocks read by ansible-playbook", () => {
       "",
     ].join("\n");
     const session = (await prepareEncrypt(deps))!;
-    const targets = plainScalars(source).filter((t) =>
-      ["s3cret", "listsecret"].includes(t.value),
-    );
+    const targets = plainScalars(source).filter((t) => ["s3cret", "listsecret"].includes(t.value));
     expect(targets).toHaveLength(2);
     const edits = await Promise.all(targets.map((t) => encryptValueEdit(t, session, "\n")));
     const encrypted = edits

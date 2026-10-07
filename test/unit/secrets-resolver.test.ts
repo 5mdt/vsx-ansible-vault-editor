@@ -1,19 +1,8 @@
-import {
-  chmodSync,
-  mkdirSync,
-  mkdtempSync,
-  readFileSync,
-  rmSync,
-  writeFileSync,
-} from "node:fs";
+import { chmodSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import {
-  SecretResolver,
-  type PromptResult,
-  type SecretStore,
-} from "../../src/secrets/resolver";
+import { SecretResolver, type PromptResult, type SecretStore } from "../../src/secrets/resolver";
 
 class MemStore implements SecretStore {
   data = new Map<string, string>();
@@ -58,9 +47,7 @@ function file(name: string, content: string, mode = 0o600): string {
   return p;
 }
 
-function resolver(
-  over: Partial<ConstructorParameters<typeof SecretResolver>[0]> = {},
-) {
+function resolver(over: Partial<ConstructorParameters<typeof SecretResolver>[0]> = {}) {
   return new SecretResolver({
     env: {},
     workspaceRoot: root,
@@ -127,20 +114,14 @@ describe("resolution order", () => {
   it("relative paths in ansible.cfg resolve against the cfg directory", async () => {
     mkdirSync(join(root, "sub"));
     writeFileSync(join(root, "sub", "pw"), "from-sub");
-    writeFileSync(
-      join(root, "sub", "ansible.cfg"),
-      "[defaults]\nvault_password_file = pw\n",
-    );
+    writeFileSync(join(root, "sub", "ansible.cfg"), "[defaults]\nvault_password_file = pw\n");
     rmSync(join(root, "ansible.cfg"));
     const r = resolver({ env: { ANSIBLE_CONFIG: join(root, "sub", "ansible.cfg") } });
     expect(await r.candidates("x")).toEqual(["from-sub"]);
   });
 
   it("`prompt` identity source is skipped", async () => {
-    writeFileSync(
-      join(root, "ansible.cfg"),
-      "[defaults]\nvault_identity_list = prod@prompt\n",
-    );
+    writeFileSync(join(root, "ansible.cfg"), "[defaults]\nvault_identity_list = prod@prompt\n");
     expect(await resolver().candidates("prod")).toEqual([]);
   });
 
@@ -155,16 +136,12 @@ describe("resolution order", () => {
 describe("secret sources", () => {
   it("plain file is fully trimmed", async () => {
     file("pw", "  secret \n\n");
-    expect(await resolver({ passwordFile: "pw" }).candidates("a")).toEqual([
-      "secret",
-    ]);
+    expect(await resolver({ passwordFile: "pw" }).candidates("a")).toEqual(["secret"]);
   });
 
   it("script stdout loses only CR/LF", async () => {
     file("pw.sh", "#!/bin/sh\nprintf ' sp ace \\r\\n'\n", 0o700);
-    expect(await resolver({ passwordFile: "pw.sh" }).candidates("a")).toEqual([
-      " sp ace ",
-    ]);
+    expect(await resolver({ passwordFile: "pw.sh" }).candidates("a")).toEqual([" sp ace "]);
   });
 
   it("non-zero script exit is reported and falls through", async () => {
@@ -201,9 +178,9 @@ describe("secret sources", () => {
     const r = resolver({ passwordFile: "run.sh", trusted: false });
     expect(await r.candidates("a")).toEqual([]);
     expect(reports.some((m) => /untrusted/i.test(m))).toBe(true);
-    expect(
-      await resolver({ passwordFile: "plain.pw", trusted: false }).candidates("a"),
-    ).toEqual(["plain"]);
+    expect(await resolver({ passwordFile: "plain.pw", trusted: false }).candidates("a")).toEqual([
+      "plain",
+    ]);
     expect(() => readFileSync(join(root, "ran"))).toThrow();
   });
 
@@ -220,9 +197,7 @@ describe("labels", () => {
     file("ansible.cfg", "[defaults]\nvault_identity_list = dev@a.pw, b.pw\n");
     await store.set("prod", "x");
     const r = resolver({ env: { ANSIBLE_VAULT_IDENTITY_LIST: "stage@s.pw" } });
-    expect((await r.labels()).sort()).toEqual(
-      ["default", "dev", "prod", "stage"].sort(),
-    );
+    expect((await r.labels()).sort()).toEqual(["default", "dev", "prod", "stage"].sort());
   });
 });
 

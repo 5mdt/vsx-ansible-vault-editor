@@ -1,5 +1,6 @@
 // #AVE-0013: the buffer-only "ansible-vault: encrypt" markers; pure text, no vscode.
 
+import { lineEnd } from "../util";
 import { inlineTargets, type ValueTarget } from "../inline/yaml-values";
 
 const MARKER = /#\s*ansible-vault:\s*encrypt(?:[ \t]+id=(\S+))?[ \t]*$/;
@@ -25,13 +26,6 @@ export interface ValueMarker {
 export interface Markers {
   file?: FileMarker;
   values: ValueMarker[];
-}
-
-// #BUG-0013: lineStart (yaml-values.ts) and lineEnd are split across two files.
-function lineEnd(text: string, from: number): number {
-  const nl = text.indexOf("\n", from);
-  const end = nl < 0 ? text.length : nl;
-  return end > from && text[end - 1] === "\r" ? end - 1 : end;
 }
 
 // #AVE-0013
@@ -104,7 +98,9 @@ export function toggleMarkerEdit(
     return { start: 0, end: markers.file.end, newText: "" };
   }
   const { targets, ok } = inlineTargets(text);
-  const target = ok ? targets.find((t) => !t.vault && offset >= t.start && offset <= t.end) : undefined;
+  const target = ok
+    ? targets.find((t) => !t.vault && offset >= t.start && offset <= t.end)
+    : undefined;
   if (target) {
     const le = lineEnd(text, target.start);
     const at = target.end > le ? le : target.end;

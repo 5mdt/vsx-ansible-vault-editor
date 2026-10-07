@@ -13,7 +13,10 @@ const PASSWORD = "test-password";
 const hasVault = spawnSync("ansible-vault", ["--version"]).status === 0;
 
 class MemStore implements SecretStore {
-  data = new Map<string, string>([["default", PASSWORD], ["prod", PASSWORD]]);
+  data = new Map<string, string>([
+    ["default", PASSWORD],
+    ["prod", PASSWORD],
+  ]);
   get = async (id: string) => this.data.get(id);
   set = async (id: string, s: string) => void this.data.set(id, s);
   delete = async (id: string) => void this.data.delete(id);

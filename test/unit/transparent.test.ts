@@ -17,15 +17,27 @@ function resolver(keys: Record<string, string> = { default: "pw", prod: "pw" }) 
   const store = new MemStore();
   for (const [k, v] of Object.entries(keys)) store.data.set(k, v);
   return new SecretResolver({
-    env: {}, home: "/nonexistent-home", trusted: true, store, report: () => {}, prompt: async () => undefined,
+    env: {},
+    home: "/nonexistent-home",
+    trusted: true,
+    store,
+    report: () => {},
+    prompt: async () => undefined,
   });
 }
 const backend = new NativeBackend();
 const sealDeps = (secret: string | null = "pw", defaultVaultId?: string): SealDeps => ({
-  backend, defaultVaultId, secretFor: async () => secret ?? undefined, eol: "\n",
+  backend,
+  defaultVaultId,
+  secretFor: async () => secret ?? undefined,
+  eol: "\n",
 });
 const block = (key: string, plain: string, id?: string) =>
-  `${key}: !vault |\n${encrypt(plain, "pw", { vaultId: id }).trimEnd().split("\n").map((l) => "  " + l).join("\n")}\n`;
+  `${key}: !vault |\n${encrypt(plain, "pw", { vaultId: id })
+    .trimEnd()
+    .split("\n")
+    .map((l) => "  " + l)
+    .join("\n")}\n`;
 
 // #AVE-0013
 describe("transparent mode", () => {
@@ -41,7 +53,13 @@ describe("transparent mode", () => {
 
   it("re-encrypts an edited file with the original vault id and no marker", async () => {
     const source = encrypt("a: 1\n", "pw", { vaultId: "prod" });
-    const plan = await planSave("# ansible-vault: encrypt id=other\na: 2\n", snapshot(source), false, new Map(), sealDeps());
+    const plan = await planSave(
+      "# ansible-vault: encrypt id=other\na: 2\n",
+      snapshot(source),
+      false,
+      new Map(),
+      sealDeps(),
+    );
     expect(plan.ok).toBe(true);
     if (!plan.ok) return;
     expect(parseEnvelope(plan.newText).vaultId).toBe("prod");
@@ -58,7 +76,13 @@ describe("transparent mode", () => {
     const hdr = "# ansible-vault: encrypt id=file\na: 1\n";
     const whole = await planSave(hdr, snapshot("a: 1\n"), false, new Map(), sealDeps("pw", "dflt"));
     expect(whole.ok && parseEnvelope(whole.newText).vaultId).toBe("file");
-    const bare = await planSave("# ansible-vault: encrypt\na: 1\n", snapshot("a: 1\n"), false, new Map(), sealDeps("pw", "dflt"));
+    const bare = await planSave(
+      "# ansible-vault: encrypt\na: 1\n",
+      snapshot("a: 1\n"),
+      false,
+      new Map(),
+      sealDeps("pw", "dflt"),
+    );
     expect(bare.ok && parseEnvelope(bare.newText).vaultId).toBe("dflt");
   });
 
@@ -92,7 +116,11 @@ describe("transparent mode", () => {
     const t = "pw: hunter2 # ansible-vault: encrypt\n";
     const plan = await planSave(t, snapshot(t), false, new Map(), sealDeps(null));
     expect(plan).toEqual({ ok: false, reason: "no-secret" });
-    const open = await decryptForBuffer(encrypt("a: 1\n", "pw"), { backend, resolver: resolver({}) }, "\n");
+    const open = await decryptForBuffer(
+      encrypt("a: 1\n", "pw"),
+      { backend, resolver: resolver({}) },
+      "\n",
+    );
     expect(open.state).toBe("no-secret");
   });
 

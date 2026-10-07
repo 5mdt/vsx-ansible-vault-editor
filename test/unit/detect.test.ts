@@ -1,10 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-  blockAt,
-  describeDocument,
-  fileVaultId,
-  findVaultBlocks,
-} from "../../src/detect";
+import { blockAt, describeDocument, fileVaultId, findVaultBlocks } from "../../src/detect";
 
 const doc = [
   "db:",
@@ -98,15 +93,9 @@ describe("document state follows the cursor", () => {
   });
 
   it("vaulted file shows its id or 'vault'", () => {
-    expect(describeDocument("$ANSIBLE_VAULT;1.2;AES256;prod\nab\n", 0).status).toBe(
-      "🔒 prod",
-    );
-    expect(describeDocument("$ANSIBLE_VAULT;1.1;AES256\nab\n", 0).status).toBe(
-      "🔒 vault",
-    );
-    expect(describeDocument("$ANSIBLE_VAULT;1.1;AES256\nab\n", 0).fileIsVaulted).toBe(
-      true,
-    );
+    expect(describeDocument("$ANSIBLE_VAULT;1.2;AES256;prod\nab\n", 0).status).toBe("🔒 prod");
+    expect(describeDocument("$ANSIBLE_VAULT;1.1;AES256\nab\n", 0).status).toBe("🔒 vault");
+    expect(describeDocument("$ANSIBLE_VAULT;1.1;AES256\nab\n", 0).fileIsVaulted).toBe(true);
   });
 
   it("nothing vaulted -> no status", () => {

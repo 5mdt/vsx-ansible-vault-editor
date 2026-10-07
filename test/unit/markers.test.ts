@@ -16,12 +16,14 @@ describe("markers", () => {
   });
 
   it("parses value markers, ids and ranges", () => {
-    const text = "a: 1\npw: s3cret # ansible-vault: encrypt id=prod\nq: \"x # y\"\n";
+    const text = 'a: 1\npw: s3cret # ansible-vault: encrypt id=prod\nq: "x # y"\n';
     const m = parseMarkers(text);
     expect(m.values).toHaveLength(1);
     expect(m.values[0].vaultId).toBe("prod");
     expect(m.values[0].target.value).toBe("s3cret");
-    expect(text.slice(m.values[0].start, m.values[0].end)).toBe("s3cret # ansible-vault: encrypt id=prod");
+    expect(text.slice(m.values[0].start, m.values[0].end)).toBe(
+      "s3cret # ansible-vault: encrypt id=prod",
+    );
   });
 
   it("finds a marker on a block scalar header", () => {

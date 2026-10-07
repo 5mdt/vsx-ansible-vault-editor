@@ -1,8 +1,10 @@
 // #AVE-0006: turn a value or block into a text edit; no vscode types.
 
-import type { EncryptSession, OpsDeps } from "../commands/session";
-import { seal } from "../commands/session";
+import { RefusedError } from "../errors";
+import type { SecretResolver } from "../secrets/resolver";
 import { decryptWithSecrets } from "../secrets/vault-ids";
+import type { VaultBackend } from "../vault/backend";
+import { seal, type EncryptSession } from "../vault/seal";
 import { formatScalar, vaultBlockText, type ValueTarget } from "./yaml-values";
 
 export interface TextEdit {
@@ -11,14 +13,23 @@ export interface TextEdit {
   newText: string;
 }
 
-/** The command does not apply here; the message is shown to the user as is. */
-// #AVE-0005, #AVE-0006
-// #BUG-0014: imported by seven modules from here; belongs in a shared errors module.
-export class RefusedError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = "RefusedError";
+/**
+ * Apply non-overlapping edits in one pass: sort ascending, copy the gaps and
+ * replacements into a slice list, join once. Input order does not matter.
+ */
+// #AVE-0006, #AVE-0008, #AVE-0009, #AVE-0013, #AVE-0015
+export function applyTextEdits(text: string, edits: readonly TextEdit[]): string {
+  if (!edits.length) return text;
+  const sorted = [...edits].sort((a, b) => a.start - b.start);
+  const parts: string[] = [];
+  let cursor = 0;
+  for (const e of sorted) {
+    const start = Math.max(e.start, cursor);
+    parts.push(text.slice(cursor, start), e.newText);
+    cursor = Math.max(cursor, e.end);
   }
+  parts.push(text.slice(cursor));
+  return parts.join("");
 }
 
 // #AVE-0006
@@ -38,11 +49,13 @@ export async function encryptValueEdit(
 
 // #AVE-0006
 export async function decryptBlockEdit(
-  target: ValueTarget,
-  deps: Pick<OpsDeps, "backend" | "resolver">,
+  target: Pick<ValueTarget, "start" | "end" | "ciphertext" | "parentIndent"> & {
+    vault?: boolean;
+  },
+  deps: { backend: VaultBackend; resolver: SecretResolver },
   eol: "\n" | "\r\n" = "\n",
 ): Promise<TextEdit> {
-  if (!target.vault || target.ciphertext === undefined) {
+  if (target.vault === false || target.ciphertext === undefined) {
     throw new RefusedError("not encrypted");
   }
   const out = await decryptWithSecrets(target.ciphertext, deps.backend, deps.resolver);

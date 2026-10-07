@@ -1,6 +1,7 @@
 // #AVE-0003: locate and read ansible.cfg, parse vault_identity_list.
 
 import { join } from "node:path";
+import { DEFAULT_LABEL } from "../vault/header";
 
 export interface FindCfgOptions {
   env: Record<string, string | undefined>;
@@ -52,7 +53,7 @@ export interface Identity {
   source: string;
 }
 
-export const DEFAULT_LABEL = "default";
+export { DEFAULT_LABEL };
 
 // #AVE-0003
 export function parseIdentityList(list: string | undefined): Identity[] {

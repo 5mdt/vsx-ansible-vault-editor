@@ -83,14 +83,16 @@ describe("peek without prompting", () => {
 
   it("wrong secret -> wrong", async () => {
     const text = block("s3cret");
-    expect(
-      await peekQuiet(text, text.indexOf("$ANSIBLE"), deps({ default: "nope" })),
-    ).toEqual({ state: "wrong" });
+    expect(await peekQuiet(text, text.indexOf("$ANSIBLE"), deps({ default: "nope" }))).toEqual({
+      state: "wrong",
+    });
   });
 
   it("malformed envelope -> nothing", async () => {
     const text = "k: !vault |\n  $ANSIBLE_VAULT;1.1;AES256\n  zz\n";
-    expect(await peekQuiet(text, text.indexOf("$ANSIBLE"), deps({ default: "pw" }))).toBeUndefined();
+    expect(
+      await peekQuiet(text, text.indexOf("$ANSIBLE"), deps({ default: "pw" })),
+    ).toBeUndefined();
   });
 
   it("plain text -> nothing", async () => {

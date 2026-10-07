@@ -1,12 +1,11 @@
 // #AVE-0012: status bar item, context keys, block decoration and folding.
 
+import { MAX_SCAN } from "../util";
 import * as vscode from "vscode";
 import { parseMarkers } from "../transparent/markers";
 import { describeDocument, fileVaultId, findVaultBlocks, type DocumentState } from "../detect";
 import { isYamlDocument, YAML_SELECTOR } from "../vscode-util";
 
-// #BUG-0013: MAX_SCAN is defined in four files.
-const MAX_SCAN = 1_000_000;
 const NOTHING: DocumentState = {
   fileIsVaulted: false,
   inVaultBlock: false,
@@ -35,7 +34,11 @@ export function registerStatus(context: vscode.ExtensionContext): void {
   context.subscriptions.push(item, decoration, markerDecoration);
 
   const setKeys = (s: DocumentState) => {
-    void vscode.commands.executeCommand("setContext", "ansibleVault.fileIsVaulted", s.fileIsVaulted);
+    void vscode.commands.executeCommand(
+      "setContext",
+      "ansibleVault.fileIsVaulted",
+      s.fileIsVaulted,
+    );
     void vscode.commands.executeCommand("setContext", "ansibleVault.inVaultBlock", s.inVaultBlock);
     void vscode.commands.executeCommand("setContext", "ansibleVault.hasMarker", s.hasMarker);
   };

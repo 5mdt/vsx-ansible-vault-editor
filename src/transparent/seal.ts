@@ -1,8 +1,9 @@
 // #AVE-0011, #AVE-0013: turn a guarded plaintext buffer back into what may be written to disk.
 
-import { createHash } from "node:crypto";
-import { seal } from "../commands/session";
+import { hashText } from "../util";
+import { seal } from "../vault/seal";
 import { fileVaultId } from "../detect";
+import { applyTextEdits, type TextEdit } from "../inline/edits";
 import { inlineTargets, vaultBlockText } from "../inline/yaml-values";
 import type { Snapshot } from "../guard/snapshot";
 import type { VaultBackend } from "../vault/backend";
@@ -25,13 +26,7 @@ export interface SealDeps {
 }
 
 export type Plan =
-  | { ok: true; newText: string; cache: SealCache }
-  | { ok: false; reason: "no-secret" };
-
-// #AVE-0013
-export function plainHash(text: string): string {
-  return createHash("sha256").update(text.replace(/\r\n/g, "\n"), "utf8").digest("hex");
-}
+  { ok: true; newText: string; cache: SealCache } | { ok: false; reason: "no-secret" };
 
 class NoSecret extends Error {}
 
@@ -43,7 +38,7 @@ async function sealItem(
   cache: SealCache,
   next: SealCache,
 ): Promise<string> {
-  const hash = plainHash(plain);
+  const hash = hashText(plain, true);
   const hit = cache.get(key);
   if (hit && hit.hash === hash && hit.vaultId === vaultId) {
     next.set(key, hit);
@@ -82,15 +77,28 @@ export async function planSave(
     if (wholeFile(text, snap, globMatch, markers)) {
       const plain = markers.file ? stripFileMarker(text, markers.file) : text;
       const id = snap.file?.vaultId ?? markers.file?.vaultId ?? (deps.defaultVaultId || undefined);
-      return { ok: true, newText: await sealItem("", plain, id, deps, cache, next), cache: next };
+      return {
+        ok: true,
+        newText: await sealItem("", plain, id, deps, cache, next),
+        cache: next,
+      };
     }
-    const items = new Map<string, { start: number; end: number; plain: string; id?: string; indent: number }>();
+    const items = new Map<
+      string,
+      { start: number; end: number; plain: string; id?: string; indent: number }
+    >();
     const { targets, ok } = inlineTargets(text);
     if (ok) {
       for (const t of targets) {
         const was = snap.blocks.get(t.path);
         if (!t.vault && was) {
-          items.set(t.path, { start: t.start, end: t.end, plain: t.value, id: was.vaultId, indent: t.parentIndent });
+          items.set(t.path, {
+            start: t.start,
+            end: t.end,
+            plain: t.value,
+            id: was.vaultId,
+            indent: t.parentIndent,
+          });
         }
       }
     }
@@ -104,13 +112,16 @@ export async function planSave(
         indent: m.target.parentIndent,
       });
     }
-    let out = text;
+    const edits: TextEdit[] = [];
     for (const [path, it] of [...items].sort((a, b) => b[1].start - a[1].start)) {
       const cipher = await sealItem(path, it.plain, it.id, deps, cache, next);
-      // #BUG-0011: reverse-sorted splice, copy-pasted five times; one applyTextEdits would do.
-      out = out.slice(0, it.start) + vaultBlockText(cipher, it.indent, deps.eol) + out.slice(it.end);
+      edits.push({
+        start: it.start,
+        end: it.end,
+        newText: vaultBlockText(cipher, it.indent, deps.eol),
+      });
     }
-    return { ok: true, newText: out, cache: next };
+    return { ok: true, newText: applyTextEdits(text, edits), cache: next };
   } catch (e) {
     if (e instanceof NoSecret) return { ok: false, reason: "no-secret" };
     throw e;

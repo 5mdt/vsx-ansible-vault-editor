@@ -4,7 +4,8 @@ const parse = (t: string) => yamlParse(t, { logLevel: "silent" });
 import { describe, expect, it } from "vitest";
 import { fileDecrypt, fileEncrypt } from "../../src/commands/file-ops";
 import { prepareEncrypt, type OpsDeps } from "../../src/commands/session";
-import { decryptBlockEdit, encryptValueEdit, RefusedError, type TextEdit } from "../../src/inline/edits";
+import { RefusedError } from "../../src/errors";
+import { decryptBlockEdit, encryptValueEdit, type TextEdit } from "../../src/inline/edits";
 import { inlineTargets, plainScalars, scalarAt } from "../../src/inline/yaml-values";
 import { SecretResolver, type SecretStore } from "../../src/secrets/resolver";
 import { NativeBackend } from "../../src/vault/backend";
@@ -50,7 +51,7 @@ const sample = [
   "# keep me",
   "db:",
   "  password: s3cret",
-  "  note: \"a: b\"",
+  '  note: "a: b"',
   "  multi: |",
   "    line one",
   "    line two",
@@ -113,7 +114,11 @@ describe("inline encrypt and decrypt", () => {
     const out = apply(sample, edit);
     expect(out).toContain("password: !vault |\n    $ANSIBLE_VAULT;1.1;AES256\n");
     expect(out.startsWith("# keep me\ndb:\n  password: !vault |")).toBe(true);
-    expect(out.endsWith("  note: \"a: b\"\n  multi: |\n    line one\n    line two\nitems:\n  - first\n  - key: nested\n")).toBe(true);
+    expect(
+      out.endsWith(
+        '  note: "a: b"\n  multi: |\n    line one\n    line two\nitems:\n  - first\n  - key: nested\n',
+      ),
+    ).toBe(true);
   });
 
   it("encrypt then decrypt every value restores the document", async () => {

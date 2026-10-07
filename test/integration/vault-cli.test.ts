@@ -95,7 +95,8 @@ describe.skipIf(!hasAnsibleVault)("backends agree", () => {
 
   it("cli rekey opens only with the new password", async () => {
     const text = await native.encrypt("rk", PASSWORD, { vaultId: "prod" });
-    const re = await cli.rekey(text, PASSWORD, "other-pw");
+    const { plaintext, vaultId } = await cli.decrypt(text, PASSWORD);
+    const re = await cli.encrypt(plaintext, "other-pw", { vaultId });
     expect((await native.decrypt(re, "other-pw")).plaintext.toString()).toBe("rk");
     await expect(native.decrypt(re, PASSWORD)).rejects.toThrow();
   });

@@ -42,7 +42,11 @@ describe("textconv driver", () => {
 
   it("replaces blocks in a mixed file", async () => {
     const pw = file("pw", "secret");
-    const lines = encrypt("hello", "secret").trimEnd().split("\n").map((l) => "  " + l).join("\n");
+    const lines = encrypt("hello", "secret")
+      .trimEnd()
+      .split("\n")
+      .map((l) => "  " + l)
+      .join("\n");
     const f = file("m.yml", `a: 1\nk: !vault |\n${lines}\n`);
     expect(await run(["--password-file", pw, f])).toBe("a: 1\nk: hello\n");
   });

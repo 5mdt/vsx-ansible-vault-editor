@@ -4,7 +4,8 @@ import { spawn } from "node:child_process";
 import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { decryptAsync, encryptAsync, VaultAuthError, VaultFormatError } from "./format";
+import { decryptAsync, encryptAsync, readHeader, VaultAuthError } from "./format";
+import { DEFAULT_LABEL } from "./header";
 
 export interface BackendEncryptOptions {
   vaultId?: string;
@@ -12,21 +13,8 @@ export interface BackendEncryptOptions {
 }
 
 export interface VaultBackend {
-  encrypt(
-    plain: Buffer | string,
-    password: string,
-    opts?: BackendEncryptOptions,
-  ): Promise<string>;
-  decrypt(
-    text: string,
-    password: string,
-  ): Promise<{ plaintext: Buffer; vaultId?: string }>;
-  rekey(
-    text: string,
-    oldPassword: string,
-    newPassword: string,
-    opts?: BackendEncryptOptions,
-  ): Promise<string>;
+  encrypt(plain: Buffer | string, password: string, opts?: BackendEncryptOptions): Promise<string>;
+  decrypt(text: string, password: string): Promise<{ plaintext: Buffer; vaultId?: string }>;
 }
 
 // #AVE-0002, #BUG-0008
@@ -42,17 +30,6 @@ export class NativeBackend implements VaultBackend {
   async decrypt(text: string, password: string) {
     return decryptAsync(text, password);
   }
-
-  // #BUG-0015: only tests call rekey; the commands decrypt and seal themselves.
-  async rekey(
-    text: string,
-    oldPassword: string,
-    newPassword: string,
-    opts: BackendEncryptOptions = {},
-  ): Promise<string> {
-    const { plaintext, vaultId } = await decryptAsync(text, oldPassword);
-    return encryptAsync(plaintext, newPassword, { vaultId, ...opts });
-  }
 }
 
 export interface RunResult {
@@ -61,11 +38,7 @@ export interface RunResult {
   stderr: string;
 }
 
-export type Runner = (
-  cmd: string,
-  args: string[],
-  stdin: Buffer,
-) => Promise<RunResult>;
+export type Runner = (cmd: string, args: string[], stdin: Buffer) => Promise<RunResult>;
 
 /** The configured ansible-vault executable does not exist. */
 // #AVE-0002
@@ -108,16 +81,10 @@ export const spawnRunner: Runner = (cmd, args, stdin) =>
     child.stdin.end(stdin);
   });
 
-const DEFAULT_LABEL = "default";
-
 /** Vault ID from the header line, without parsing the body. */
-// #BUG-0012: one of four places that parse the vault header; DEFAULT_LABEL is also defined in secrets/ansible-cfg.ts.
+// #AVE-0002
 function headerLabel(text: string): string {
-  const header = text.split(/\r?\n/, 1)[0].trim().split(";");
-  if (header[0] !== "$ANSIBLE_VAULT" || (header[1] !== "1.1" && header[1] !== "1.2")) {
-    throw new VaultFormatError("header", "not an ansible-vault envelope");
-  }
-  return header[1] === "1.2" && header[3] ? header[3] : DEFAULT_LABEL;
+  return readHeader(text).vaultId ?? DEFAULT_LABEL;
 }
 
 function withEol(text: string, eol: "\n" | "\r\n"): string {
@@ -197,15 +164,5 @@ export class CliBackend implements VaultBackend {
       plaintext: out,
       vaultId: label === DEFAULT_LABEL ? undefined : label,
     };
-  }
-
-  async rekey(
-    text: string,
-    oldPassword: string,
-    newPassword: string,
-    opts: BackendEncryptOptions = {},
-  ): Promise<string> {
-    const { plaintext, vaultId } = await this.decrypt(text, oldPassword);
-    return this.encrypt(plaintext, newPassword, { vaultId, ...opts });
   }
 }

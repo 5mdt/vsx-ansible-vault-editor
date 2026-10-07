@@ -1,6 +1,7 @@
 // #AVE-0012: local detection of vaulted files and inline blocks; never needs a password.
 
 import { inlineTargets, type ValueTarget } from "./inline/yaml-values";
+import { hasVaultMagic, parseHeader } from "./vault/header";
 import { parseMarkers, type Markers } from "./transparent/markers";
 
 export interface VaultBlock {
@@ -12,15 +13,10 @@ export interface VaultBlock {
   path: string;
 }
 
-// #BUG-0012: one of four places that parse the vault header (also yaml-values.ts, vault/backend.ts, vault/format.ts).
-const HEADER = /^\$ANSIBLE_VAULT;1\.[12];AES256(?:;(.*))?$/;
-
 // #AVE-0012
 export function fileVaultId(text: string): { vaultId?: string } | undefined {
-  const first = text.split(/\r?\n/, 1)[0].trim();
-  if (!first.startsWith("$ANSIBLE_VAULT;")) return undefined;
-  const m = HEADER.exec(first);
-  return { vaultId: m?.[1] || undefined };
+  if (!hasVaultMagic(text)) return undefined;
+  return { vaultId: parseHeader(text)?.vaultId };
 }
 
 function toBlock(t: ValueTarget): VaultBlock {

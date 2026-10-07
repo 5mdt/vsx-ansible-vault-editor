@@ -1,14 +1,12 @@
 // #AVE-0007: hover and CodeLens for vaulted values. Read-only; never prompts on its own.
 
+import { MAX_SCAN } from "../util";
 import * as vscode from "vscode";
 import { fileVaultId } from "../detect";
 import type { EditDeps } from "../edit/session";
 import { inlineTargets } from "../inline/yaml-values";
-import { isYamlDocument } from "../vscode-util";
+import { globMatch, isYamlDocument } from "../vscode-util";
 import { hoverMarkdown, peekQuiet } from "./peek";
-
-// #BUG-0013: MAX_SCAN is defined in four files.
-const MAX_SCAN = 1_000_000;
 
 /** Arguments of `ansibleVault.peek` and `ansibleVault.editDecrypted` links. */
 export interface PeekArg {
@@ -19,8 +17,10 @@ export interface PeekArg {
 
 // #AVE-0007
 export function peekExcluded(doc: vscode.TextDocument): boolean {
-  const globs = vscode.workspace.getConfiguration("ansibleVault").get<string[]>("peekExclude", []);
-  return globs.some((pattern) => vscode.languages.match({ pattern }, doc) > 0);
+  return globMatch(
+    doc,
+    vscode.workspace.getConfiguration("ansibleVault").get<string[]>("peekExclude", []),
+  );
 }
 
 function link(title: string, command: string, arg: PeekArg): string {
