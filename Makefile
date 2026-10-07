@@ -1,4 +1,4 @@
-.PHONY: all logo site ddd roadmap release install compile watch lint test test-unit test-integration test-extension screenshots screenshots-publish package publish-vsce publish-ovsx clean
+.PHONY: all logo site ddd roadmap release install compile watch lint test test-unit test-integration test-extension bench bench-baseline screenshots screenshots-publish package publish-vsce publish-ovsx clean
 
 VSIX = build/ansible-vault-editor.vsix
 BUMP ?= minor
@@ -34,6 +34,15 @@ test-integration:
 
 test-extension:
 	npm run test:extension
+
+# Not part of `test` or CI: numbers are machine-specific. Compares with test/bench/baseline.json.
+bench:
+	mkdir -p build/bench
+	npm run bench
+
+# Overwrite the committed baseline from a fresh run.
+bench-baseline:
+	npm run bench:baseline
 
 screenshots: compile
 	npx esbuild scripts/screenshots/run.ts --bundle --platform=node --format=cjs --external:playwright-core --external:@vscode/test-electron --outfile=build/screenshots-run/run.js

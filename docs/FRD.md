@@ -1,6 +1,6 @@
 # Feature Requirements Document
 
-Next free ID: **AVE-0018**.
+Next free ID: **AVE-0019**.
 
 ## Available Features
 
@@ -21,6 +21,7 @@ Next free ID: **AVE-0018**.
 - [X] [AVE-0015. Decrypted diff](features/AVE-0015-decrypted-diff.md) - `#ui` `#file` `#inline`
 - [X] [AVE-0016. Landing page](features/AVE-0016-landing-page.md) - `#site` `#docs`
 - [X] [AVE-0017. Logo export](features/AVE-0017-logo-export.md) - `#site` `#tooling`
+- [X] [AVE-0018. Benchmarks](features/AVE-0018-benchmarks.md) - `#tooling` `#perf`
 
 ## Deprecated
 
@@ -34,8 +35,9 @@ Next free ID: **AVE-0018**.
 - `#guard`: AVE-0011, AVE-0013
 - `#inline`: AVE-0006, AVE-0007, AVE-0013, AVE-0015
 - `#keys`: AVE-0014
+- `#perf`: AVE-0018
 - `#rekey`: AVE-0009, AVE-0010
 - `#secrets`: AVE-0003, AVE-0004
 - `#site`: AVE-0016, AVE-0017
-- `#tooling`: AVE-0017
+- `#tooling`: AVE-0017, AVE-0018
 - `#ui`: AVE-0005, AVE-0006, AVE-0007, AVE-0008, AVE-0012, AVE-0014, AVE-0015

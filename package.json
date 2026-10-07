@@ -292,6 +292,8 @@
     "package": "npm run bundle && vsce package --no-dependencies --readme-path extension/README.md --baseImagesUrl https://github.com/5mdt/vsx-ansible-vault-editor/raw/HEAD/extension --out build/",
     "test:unit": "vitest run test/unit",
     "test:integration": "vitest run test/integration",
+    "bench": "vitest bench --run --reporter=verbose",
+    "bench:baseline": "AVE_BENCH_BASELINE=1 vitest bench --run --reporter=verbose",
     "test:extension": "npm run compile && tsc -p tsconfig.test.json && vscode-test",
     "bundle": "esbuild src/extension.ts src/textconv.ts --bundle --platform=node --format=cjs --external:vscode --sourcemap --outdir=build"
   },
