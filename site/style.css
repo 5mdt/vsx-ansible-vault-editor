@@ -38,3 +38,6 @@ td { padding: .4rem .6rem; border-bottom: 1px solid var(--line); }
 code { font: .9em ui-monospace, monospace; overflow-wrap: anywhere; }
 a { color: var(--accent); }
 footer { padding: 2rem 16px 3rem; text-align: center; }
+
+th { text-align: left; padding: .4rem .6rem; border-bottom: 2px solid var(--line); }
+.bench td:nth-child(n+2) { text-align: right; white-space: nowrap; }

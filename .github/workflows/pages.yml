@@ -8,6 +8,8 @@ on:
     paths:
       - site/**
       - scripts/site/**
+      - docs/CHANGELOG.md
+      - test/bench/baseline/**
       - package.json
       - extension/**
       - .github/workflows/pages.yml

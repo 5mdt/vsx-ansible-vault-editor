@@ -8,10 +8,12 @@ As someone who has heard of the extension, I want one page that shows what it do
 
 ## Behavior
 
-- A static site is generated from `site/` and `package.json` into `build/site/` (`index.html` and `demo.gif`) by `make site` (`node scripts/site/build.mjs`). No runtime dependencies and no client-side framework.
+- A static site is generated from `site/` and `package.json` into `build/site/` (`index.html`, `changelog.html`, `benchmarks.html` and `demo.gif`) by `make site` (`node scripts/site/build.mjs`). No runtime dependencies and no client-side framework.
 - The page has: a hero (logo, name, one-line description, version), install buttons for the [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=5mdt.ansible-vault-editor) and [Open VSX](https://open-vsx.org/extension/5mdt/ansible-vault-editor), a direct download link for the [latest `.vsix`](https://github.com/5mdt/vsx-ansible-vault-editor/releases/latest/download/ansible-vault-editor.vsix) on GitHub Releases (with the `--install-extension` command for it), the demo GIF, a feature list, the command table and a footer with links to the source, the changelog, the license and the [5mdt](https://5mdt.github.io) project site.
+- `changelog.html` is `docs/CHANGELOG.md` rendered at build time (headings, bullet lists, inline code, links) with the same inlined stylesheet and favicon and a link back to the landing page; the footer's Changelog link points to it rather than to GitHub.
+- `benchmarks.html` is the committed baseline in `test/bench/baseline/` ([AVE-0018](AVE-0018-benchmarks.md)) as a table: one row per case (name from the file name), mean time, throughput (ops/s), relative margin of error and sample count, sorted by name. It has the same stylesheet, favicon and back link as `changelog.html`, a note that figures are machine-specific, and is linked from the footer. A missing or empty baseline directory fails the build.
 - The version and the command table are read from `package.json` at build time, so they cannot drift from the extension. Feature copy lives in `site/index.html`.
-- `.github/workflows/pages.yml` builds the site and deploys it to GitHub Pages on every push to `main` that touches `site/`, `scripts/site/`, `package.json` or `extension/`, and on manual dispatch.
+- `.github/workflows/pages.yml` builds the site and deploys it to GitHub Pages on every push to `main` that touches `site/`, `scripts/site/`, `docs/CHANGELOG.md`, `test/bench/baseline/`, `package.json` or `extension/`, and on manual dispatch.
 - The stylesheet is inlined and the logo and favicon are `data:` URIs; the demo GIF (~400 KB) is the one external file, `demo.gif` next to `index.html`, so the page renders without waiting for it. The `<img>` carries `width` and `height` read from the GIF header at build time, so the layout does not shift when it loads (CSS scales it down on narrow screens, keeping the ratio). The relative path works under any path or domain, and from disk.
 - The favicon is the 64px `extension/logo.png` (already favicon-sized and crisp as pixel art), embedded as a PNG `data:` URI.
 - The three install buttons (Marketplace, Open VSX, `.vsix`) share one outlined style and fill with the accent colour on hover and keyboard focus; they sit in a row and wrap onto their own lines on a narrow screen.
@@ -20,7 +22,7 @@ As someone who has heard of the extension, I want one page that shows what it do
 
 ## Implementation
 
-- `scripts/site/build.mjs`: `buildSite({ root, outDir })` substitutes `{{version}}`, `{{commands}}`, `{{style}}`, `{{logo}}`, `{{favicon}}`, `{{demoWidth}}` and `{{demoHeight}}` in `site/index.html`, writes the result and `.nojekyll`, and copies `demo.gif`.
+- `scripts/site/build.mjs`: `buildSite({ root, outDir })` substitutes `{{version}}`, `{{commands}}`, `{{style}}`, `{{logo}}`, `{{favicon}}`, `{{demoWidth}}` and `{{demoHeight}}` in `site/index.html`, writes the result and `.nojekyll`, renders `changelog.html` from `docs/CHANGELOG.md` and `benchmarks.html` from the baseline, and copies `demo.gif`.
 - `site/index.html`, `site/style.css`: the template and the stylesheet that gets inlined.
 
 ## Quirks & Decisions
@@ -44,7 +46,9 @@ See [landing-page](../ux/pages/landing-page.md).
 ### Unit
 
 - The build writes `index.html` with the `package.json` version and one row per contributed command, and leaves no `{{` placeholder.
-- The output is only `index.html`, `demo.gif` and `.nojekyll`; the page has an inline `<style>`, a PNG favicon as a `data:` URI, and the only relative reference is `demo.gif` with the GIF's real `width` and `height`; a missing asset makes the build throw.
+- The output is only `index.html`, `changelog.html`, `benchmarks.html`, `demo.gif` and `.nojekyll`; the page has an inline `<style>`, a PNG favicon as a `data:` URI, and the only relative reference is `demo.gif` with the GIF's real `width` and `height`; a missing asset makes the build throw.
+- `changelog.html` has one heading per changelog section, escapes HTML, renders `` `code` `` as `<code>`, and is linked from the footer of `index.html`.
+- `benchmarks.html` has one table row per file in `test/bench/baseline/`, is linked from the footer of `index.html`, and a build with no baseline files throws.
 - Both marketplace URLs and the latest-release `.vsix` URL are present in the output.
 
 ### Integration

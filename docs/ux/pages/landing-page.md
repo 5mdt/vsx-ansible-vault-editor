@@ -18,7 +18,7 @@
 │  Features    (list)                                   │
 │  Commands    (table from package.json)                │
 │                                                       │
-│  GitHub · Changelog · License · More from 5mdt        │
+│  GitHub · Changelog · Benchmarks · License · More from 5mdt        │
 └───────────────────────────────────────────────────────┘
 ```
 
@@ -37,5 +37,7 @@
 | VS Code Marketplace | opens the Marketplace page | n/a      | no       |
 | Open VSX            | opens the Open VSX page    | n/a      | no       |
 | Download .vsix      | downloads the latest build | n/a      | no       |
-| GitHub, Changelog   | opens the repository files | n/a      | no       |
+| GitHub              | opens the repository       | n/a      | no       |
+| Changelog           | opens `changelog.html`     | n/a      | no       |
+| Benchmarks          | opens `benchmarks.html`    | n/a      | no       |
 | More from 5mdt      | opens 5mdt.github.io       | n/a      | no       |

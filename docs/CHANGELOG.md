@@ -3,7 +3,7 @@
 ## Unreleased
 - #AVE-0018: `make bench` runs benchmarks for crypto, detection, rekey and the decrypted diff view and compares them with a committed baseline (`make bench-baseline`)
 - #AVE-0017: `make logo` renders `extension/logo.pxo` to the 1x/2x/4x PNGs and a `favicon.ico`
-- #AVE-0016: landing page, an HTML file with inlined styles, logo and favicon and the demo GIF as a separate, size-pinned file, generated from `site/` and `package.json` (`make site`) and deployed to GitHub Pages (linked from both READMEs), with a direct link to the latest `.vsix` on GitHub Releases
+- #AVE-0016: landing page, an HTML file with inlined styles, logo and favicon and the demo GIF as a separate, size-pinned file, generated from `site/` and `package.json` (`make site`) and deployed to GitHub Pages (linked from both READMEs), with a direct link to the latest `.vsix` on GitHub Releases, and the changelog published next to it as `changelog.html` and the benchmark baseline as `benchmarks.html`
 
 ## v1.0.1 (2026-10-05)
 
