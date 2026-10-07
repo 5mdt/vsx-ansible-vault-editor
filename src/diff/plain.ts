@@ -34,6 +34,7 @@ export async function plainView(
   for (const b of [...findVaultBlocks(text)].sort((x, y) => y.start - x.start)) {
     try {
       const plain = (await decrypt(b.ciphertext)).plaintext.toString("utf8");
+      // #BUG-0011: reverse-sorted splice, copy-pasted five times; one applyTextEdits would do.
       out = out.slice(0, b.start) + formatScalar(plain, b.parentIndent, eol) + out.slice(b.end);
     } catch (e) {
       if (onFail === "throw") throw e;

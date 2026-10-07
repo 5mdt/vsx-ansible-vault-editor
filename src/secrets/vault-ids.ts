@@ -65,6 +65,7 @@ async function tryKnownSecrets(
   resolver: SecretResolver,
   id: string,
 ): Promise<Attempt> {
+  // #BUG-0009: candidates() per label re-reads every source; build the sources once per operation.
   const order = [id, ...(await resolver.labels()).filter((l) => l !== id)];
   const tried = new Set<string>();
   for (const label of order) {

@@ -30,6 +30,7 @@ export interface VaultBackend {
 }
 
 // #AVE-0002
+// #BUG-0008: async in name only; the crypto underneath is synchronous.
 export class NativeBackend implements VaultBackend {
   async encrypt(
     plain: Buffer | string,
@@ -43,6 +44,7 @@ export class NativeBackend implements VaultBackend {
     return decrypt(text, password);
   }
 
+  // #BUG-0015: only tests call rekey; the commands decrypt and seal themselves.
   async rekey(
     text: string,
     oldPassword: string,
@@ -110,6 +112,7 @@ export const spawnRunner: Runner = (cmd, args, stdin) =>
 const DEFAULT_LABEL = "default";
 
 /** Vault ID from the header line, without parsing the body. */
+// #BUG-0012: one of four places that parse the vault header; DEFAULT_LABEL is also defined in secrets/ansible-cfg.ts.
 function headerLabel(text: string): string {
   const header = text.split(/\r?\n/, 1)[0].trim().split(";");
   if (header[0] !== "$ANSIBLE_VAULT" || (header[1] !== "1.1" && header[1] !== "1.2")) {

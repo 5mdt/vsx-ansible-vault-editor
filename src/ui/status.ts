@@ -5,6 +5,7 @@ import { parseMarkers } from "../transparent/markers";
 import { describeDocument, fileVaultId, findVaultBlocks, type DocumentState } from "../detect";
 import { isYamlDocument, YAML_SELECTOR } from "../vscode-util";
 
+// #BUG-0013: MAX_SCAN is defined in four files.
 const MAX_SCAN = 1_000_000;
 const NOTHING: DocumentState = {
   fileIsVaulted: false,
@@ -40,6 +41,7 @@ export function registerStatus(context: vscode.ExtensionContext): void {
   };
 
   const update = () => {
+    // #BUG-0007: up to four full YAML parses per cursor move (describeDocument, findVaultBlocks, parseMarkers, plus the providers).
     const editor = vscode.window.activeTextEditor;
     if (!editor || editor.document.getText().length > MAX_SCAN) {
       item.hide();

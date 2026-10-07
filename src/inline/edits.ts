@@ -13,6 +13,7 @@ export interface TextEdit {
 
 /** The command does not apply here; the message is shown to the user as is. */
 // #AVE-0005, #AVE-0006
+// #BUG-0014: imported by seven modules from here; belongs in a shared errors module.
 export class RefusedError extends Error {
   constructor(message: string) {
     super(message);

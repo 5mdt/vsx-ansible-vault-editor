@@ -135,6 +135,7 @@ async function fileCommand(op: FileOp, uris: vscode.Uri[], resolver: SecretResol
           asked = true;
         }
         if (!session) return;
+        // #BUG-0013: EOL detection from text appears in four places.
         const eol = open ? eolOf(open) : text.includes("\r\n") ? "\r\n" : "\n";
         out = await fileEncrypt(text, session, eol);
       } else {
@@ -179,6 +180,7 @@ async function encryptAllInFile(resolver: SecretResolver): Promise<void> {
 
 // #AVE-0006
 async function decryptAllInFile(resolver: SecretResolver): Promise<void> {
+  // #BUG-0016: re-implements findVaultBlocks and calls getText() twice; the failure-collect pattern is repeated three times.
   const editor = activeEditor();
   const doc = editor.document;
   const { targets, ok } = inlineTargets(doc.getText());
@@ -323,6 +325,7 @@ export function registerCommands(
     context.subscriptions.push(
       vscode.commands.registerCommand(
         command,
+        // #BUG-0015: every command has a handler now; the fallback and the "stubs" comment above are stale.
         handlers[command] ??
           (() => {
             void vscode.window.showInformationMessage(`${command}: not implemented yet`);

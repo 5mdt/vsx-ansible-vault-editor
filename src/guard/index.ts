@@ -19,6 +19,7 @@ import {
   type Snapshot,
 } from "./snapshot";
 
+// #BUG-0013: MAX_SCAN is defined in four files.
 const MAX_SCAN = 1_000_000;
 const AUTOSAVE_WARNED = "ansibleVault.autoSaveWarned";
 
@@ -58,6 +59,7 @@ function wholeRange(doc: vscode.TextDocument): vscode.Range {
 }
 
 // #AVE-0011
+// #BUG-0017: a 190-line closure with five mutable per-document flags (pending, allow, restore, held, override); extract the transitions into a pure module.
 export function registerSaveGuard(
   context: vscode.ExtensionContext,
   resolver: SecretResolver,
@@ -121,6 +123,7 @@ export function registerSaveGuard(
 
   /** The text to write instead of the buffer, or undefined to write the buffer as it is. */
   const safeText = async (doc: vscode.TextDocument, st: DocState): Promise<string | undefined> => {
+    // #BUG-0007: guardReasons, planSave and snapshot each parse the text again; reasons are computed before `allow === "plain"` is checked.
     const text = doc.getText();
     if (st.override !== undefined) {
       const rekeyed = st.override;

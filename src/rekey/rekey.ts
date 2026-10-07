@@ -69,6 +69,7 @@ export async function rekeyText(
     .map((b, i) => ({ b, cipher: sealed[i] }))
     .sort((x, y) => y.b.start - x.b.start)
     .forEach(({ b, cipher }) => {
+      // #BUG-0011: reverse-sorted splice, copy-pasted five times; one applyTextEdits would do.
       out = out.slice(0, b.start) + vaultBlockText(cipher, b.parentIndent, eol) + out.slice(b.end);
     });
   return { text: out, count: chosen.length };

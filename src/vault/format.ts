@@ -59,6 +59,7 @@ function strictHex(text: string, what: string): Buffer {
 }
 
 function deriveKeys(password: string, salt: Buffer) {
+  // #BUG-0008: synchronous, about 15 ms per call on the extension host; use the async `pbkdf2`.
   const key = pbkdf2Sync(password, salt, ITERATIONS, 80, "sha256");
   return {
     cipherKey: key.subarray(0, 32),

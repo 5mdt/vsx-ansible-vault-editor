@@ -13,6 +13,7 @@ import { replaceWholeDocument } from "../vscode-util";
 import { itemsIn, rekeyMany, rekeyText, selectBlocks, type RekeyDeps } from "./rekey";
 import { excludeGlob, filterById, idCounts, previewTitle, scanText, type ScanEntry } from "./scan";
 
+// #BUG-0013: MAX_SCAN is defined in four files.
 const MAX_SCAN = 1_000_000;
 
 const readDisk = async (uri: vscode.Uri) =>
@@ -51,6 +52,7 @@ export async function rekeyCommand(resolver: SecretResolver, guard: GuardHandle)
   const backend = getBackend();
   const sel = editor.selection;
   const deps: RekeyDeps = { backend, decrypt: (c) => decryptWithSecrets(c, backend, resolver) };
+  // #BUG-0016, #BUG-0018: the ternary on vaultId equals { vaultId, secret }; lines like this are about 190 characters.
   const out = await rekeyText(text, target.vaultId === undefined ? { secret: target.secret } : { vaultId: target.vaultId, secret: target.secret }, deps, {
     // Offsets of a decrypted buffer do not match the disk text: take every block.
     blocks: transparent ? undefined : (all) => selectBlocks(all, doc.offsetAt(sel.start), doc.offsetAt(sel.end)),
@@ -73,6 +75,7 @@ interface Found {
 const idLabel = (id: string) => (id === "" ? "(no ID)" : id);
 
 async function scanWorkspace(guard: GuardHandle): Promise<Found[]> {
+  // #BUG-0010: serial stat and full read per file, and textDocuments.find per URI; use a Map and bounded parallel reads.
   const exclude = excludeGlob(
     vscode.workspace.getConfiguration("files").get<Record<string, boolean>>("exclude", {}),
     vscode.workspace.getConfiguration("ansibleVault").get<string[]>("rekeyExclude", []),

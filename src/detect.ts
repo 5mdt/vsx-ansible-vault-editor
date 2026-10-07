@@ -12,6 +12,7 @@ export interface VaultBlock {
   path: string;
 }
 
+// #BUG-0012: one of four places that parse the vault header (also yaml-values.ts, vault/backend.ts, vault/format.ts).
 const HEADER = /^\$ANSIBLE_VAULT;1\.[12];AES256(?:;(.*))?$/;
 
 // #AVE-0012
@@ -65,6 +66,7 @@ export function describeDocument(text: string, offset: number): DocumentState {
       status: `🔒 ${file.vaultId ?? "vault"}`,
     };
   }
+  // #BUG-0007: findVaultBlocks and parseMarkers each parse the whole text, and ui/status.ts then parses both again; parse once and share.
   const blocks = findVaultBlocks(text);
   const markers = parseMarkers(text);
   return {

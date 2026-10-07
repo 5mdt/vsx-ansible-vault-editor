@@ -114,6 +114,7 @@ export class SecretResolver {
 
   /** Secrets to try for a vault ID, best first, without prompting. */
   async candidates(vaultId: string): Promise<string[]> {
+    // #BUG-0009: sources() re-reads ansible.cfg and every password file, and re-runs password scripts, on every call.
     const found: string[] = [];
     const add = (s: string | undefined) => {
       if (s && !found.includes(s)) found.push(s);

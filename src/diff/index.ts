@@ -169,6 +169,7 @@ export function registerDiff(context: vscode.ExtensionContext, resolver: SecretR
       const folder = await folderFor();
       const cwd = folder.uri.fsPath;
       const attrs = await attributesFile(cwd);
+      // #BUG-0008: blocks the extension host; use the async `execFile` already imported here.
       if (spawnSync("node", ["--version"]).status !== 0) {
         throw new RefusedError("the git driver needs `node` on the PATH");
       }

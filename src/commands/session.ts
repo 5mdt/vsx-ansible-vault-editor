@@ -35,6 +35,7 @@ export async function prepareEncrypt(deps: OpsDeps): Promise<EncryptSession | un
 }
 
 // #AVE-0005
+// #BUG-0014: used by inline, edit, rekey and transparent code, so lower layers import from commands/.
 export function seal(
   session: EncryptSession,
   plain: Buffer | string,

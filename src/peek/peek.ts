@@ -79,6 +79,7 @@ export function hoverMarkdown(plaintext: string): string {
 }
 
 /** For tests and callers that need a stable id of a document's text. */
+// #BUG-0015: unused; one of three sha256 helpers (see also hashText, plainHash) #BUG-0013.
 export function textHash(text: string): string {
   return createHash("sha256").update(text, "utf8").digest("hex");
 }

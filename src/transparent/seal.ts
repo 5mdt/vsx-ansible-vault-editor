@@ -58,6 +58,7 @@ async function sealItem(
 
 /** Whole file when it was a vaulted file, is marked as one, or must be encrypted and has no block history. */
 // #AVE-0011
+// #BUG-0007: parseMarkers parses the text; planSave parses it again right after.
 export function wholeFile(text: string, snap: Snapshot, globMatch: boolean): boolean {
   return !!snap.file || !!parseMarkers(text).file || (globMatch && snap.blocks.size === 0);
 }
@@ -71,6 +72,7 @@ export async function planSave(
   deps: SealDeps,
 ): Promise<Plan> {
   if (fileVaultId(text)) return { ok: true, newText: text, cache };
+  // #BUG-0007: see wholeFile; markers are parsed twice per save.
   const markers = parseMarkers(text);
   const next: SealCache = new Map();
   try {
@@ -102,6 +104,7 @@ export async function planSave(
     let out = text;
     for (const [path, it] of [...items].sort((a, b) => b[1].start - a[1].start)) {
       const cipher = await sealItem(path, it.plain, it.id, deps, cache, next);
+      // #BUG-0011: reverse-sorted splice, copy-pasted five times; one applyTextEdits would do.
       out = out.slice(0, it.start) + vaultBlockText(cipher, it.indent, deps.eol) + out.slice(it.end);
     }
     return { ok: true, newText: out, cache: next };

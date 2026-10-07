@@ -47,6 +47,7 @@ function dashColumn(text: string, offset: number): number {
   return /^ */.exec(text.slice(ls))![0].length;
 }
 
+// #BUG-0012: one of four places that parse the vault header.
 function header(ciphertext: string): string | undefined {
   const parts = ciphertext.split(/\r?\n/, 1)[0].trim().split(";");
   return parts[0] === "$ANSIBLE_VAULT" && parts[1] === "1.2" ? parts[3] : undefined;
@@ -92,6 +93,7 @@ export interface Targets {
 // #AVE-0006
 export function inlineTargets(text: string): Targets {
   const targets: ValueTarget[] = [];
+  // #BUG-0006: yaml's duplicate-key check makes this quadratic on big maps; `uniqueKeys: false` fixes it.
   const docs = parseAllDocuments(text, { logLevel: "silent" });
 
   const walk = (node: Node | null | undefined, path: string, indent: number): void => {

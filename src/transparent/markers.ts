@@ -27,6 +27,7 @@ export interface Markers {
   values: ValueMarker[];
 }
 
+// #BUG-0013: lineStart (yaml-values.ts) and lineEnd are split across two files.
 function lineEnd(text: string, from: number): number {
   const nl = text.indexOf("\n", from);
   const end = nl < 0 ? text.length : nl;
@@ -88,6 +89,7 @@ export function toggleMarkerEdit(
   offset: number,
   eol: "\n" | "\r\n",
 ): { start: number; end: number; newText: string } | undefined {
+  // #BUG-0007: parseMarkers and inlineTargets below each parse the whole text.
   const markers = parseMarkers(text);
   const hit = markers.values.find((v) => offset >= v.start && offset <= v.end);
   if (hit) {

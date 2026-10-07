@@ -94,6 +94,7 @@ export async function saveEdit(
     const block = ok ? targets.find((t) => t.vault && t.path === session.path) : undefined;
     if (!block) throw new RefusedError(`block "${session.path}" no longer exists in the source`);
     newSourceText =
+      // #BUG-0011: reverse-sorted splice, copy-pasted five times; one applyTextEdits would do.
       currentSource.slice(0, block.start) +
       vaultBlockText(cipher, block.parentIndent, session.eol) +
       currentSource.slice(block.end);

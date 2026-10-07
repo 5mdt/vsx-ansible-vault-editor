@@ -31,6 +31,7 @@ export async function decryptForBuffer(
   const blocks = findVaultBlocks(text);
   if (!blocks.length) return { state: "nothing" };
   let out = text;
+  // #BUG-0009: every block runs decryptQuiet, which re-reads the sources (and re-runs password scripts) each time.
   for (const b of [...blocks].sort((a, c) => c.start - a.start)) {
     const dec = await decryptQuiet(b.ciphertext, deps.backend, deps.resolver);
     if (!dec.ok) return { state: "no-secret" };
@@ -40,6 +41,7 @@ export async function decryptForBuffer(
     const comment = ` ${markerComment(b.vaultId)}`;
     const nl = scalar.indexOf(eol);
     scalar = nl < 0 ? scalar + comment : scalar.slice(0, nl) + comment + scalar.slice(nl);
+    // #BUG-0011: reverse-sorted splice, copy-pasted five times; one applyTextEdits would do.
     out = out.slice(0, b.start) + scalar + out.slice(b.end);
   }
   return { state: "plain", text: out, cache };

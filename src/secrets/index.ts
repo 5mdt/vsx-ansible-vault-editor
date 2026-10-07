@@ -71,6 +71,7 @@ export const promptForPassword: PromptFn = (vaultId, mismatch) =>
   });
 
 // #AVE-0004
+// #BUG-0016: builds and sorts its items the same way as pickRekeyId below.
 export const pickVaultId: PickFn = async (ids, defaultId) => {
   const items: vscode.QuickPickItem[] = [
     ...ids.map((id) => ({ label: id, description: id === defaultId ? "(default)" : "" })),

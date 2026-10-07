@@ -9,6 +9,8 @@
 | 5 | Safety and transparency | Transparent mode is only safe on top of the save guard |
 | 6 | Rekey                   | Rare, wide in effect; last                             |
 | 7 | Later                   | Promoted todos                                         |
+| 8 | Performance             | Measured by `make bench`; hot paths run on every edit  |
+| 9 | Code health             | Audit findings; safest after the speed fixes land      |
 
 ## 1. Crypto core
 
@@ -59,3 +61,26 @@
 1. AVE-0015 - decrypted diff in the SCM view, command first, then the opt-in git driver
 
 **Done when:** a vaulted file's diff in the SCM view shows plaintext.
+
+## 8. Performance
+
+1. BUG-0006 - detection is quadratic in file size; a one-option fix in the yaml parse
+2. BUG-0007 - parse once per event; builds on the faster parse
+3. BUG-0009 - password sources are re-read on every decrypt
+4. BUG-0008 - async crypto and no blocking calls on the extension host
+5. BUG-0010 - the workspace rekey scan reads files serially
+
+**Done when:** `make bench` shows detection linear in file size, and a cursor move on a 4k-line file takes under 20 ms.
+
+## 9. Code health
+
+1. BUG-0014 - move `RefusedError` and `seal` first; the rest import from there
+2. BUG-0012 - one vault header parser
+3. BUG-0011 - one `applyTextEdits` for the five splices
+4. BUG-0013 - shared helpers
+5. BUG-0016 - command-layer duplication
+6. BUG-0015 - dead and stale code
+7. BUG-0017 - save guard state machine, once the guard code has stopped moving
+8. BUG-0018 - formatter, last so it does not reflow code under the other changes
+
+**Done when:** `make ddd` and the unit tests pass and no `#BUG-` comments remain in `src/`.
