@@ -1,6 +1,8 @@
 # Changelog
 
 ## Unreleased
+
+## v1.1.0 (2026-10-07)
 - Rekey Workspace scan reads files in parallel and skips binaries cheaply.
 - Vault encryption, file reads and the diff helper no longer block the extension host.
 - Password scripts and secret sources are read once per resolver (cached 30 s, cleared on config change) instead of once per block.
