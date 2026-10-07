@@ -68,5 +68,4 @@
 
 ## 9. Code health
 
-
 **Done when:** `make ddd` and the unit tests pass and no `#BUG-` comments remain in `src/`.
