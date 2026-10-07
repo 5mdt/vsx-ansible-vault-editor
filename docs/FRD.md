@@ -1,6 +1,6 @@
 # Feature Requirements Document
 
-Next free ID: **AVE-0019**.
+Next free ID: **AVE-0023**.
 
 ## Available Features
 
@@ -22,6 +22,10 @@ Next free ID: **AVE-0019**.
 - [X] [AVE-0016. Landing page](features/AVE-0016-landing-page.md) - `#site` `#docs`
 - [X] [AVE-0017. Logo export](features/AVE-0017-logo-export.md) - `#site` `#tooling`
 - [X] [AVE-0018. Benchmarks](features/AVE-0018-benchmarks.md) - `#tooling` `#perf`
+- [ ] [AVE-0019. Command consolidation](features/AVE-0019-command-consolidation.md) - `#ui` `#keys`
+- [ ] [AVE-0020. Plaintext leak diagnostic](features/AVE-0020-plaintext-leak-diagnostic.md) - `#guard` `#ui`
+- [ ] [AVE-0021. Onboarding docs](features/AVE-0021-onboarding-docs.md) - `#docs` `#ui`
+- [ ] [AVE-0022. Demo video](features/AVE-0022-demo-video.md) - `#site` `#tooling`
 
 ## Deprecated
 
@@ -30,14 +34,14 @@ Next free ID: **AVE-0019**.
 - `#auto`: AVE-0013
 - `#config`: AVE-0002, AVE-0003
 - `#crypto`: AVE-0001, AVE-0002
-- `#docs`: AVE-0016
+- `#docs`: AVE-0016, AVE-0021
 - `#file`: AVE-0005, AVE-0008, AVE-0013, AVE-0015
-- `#guard`: AVE-0011, AVE-0013
+- `#guard`: AVE-0011, AVE-0013, AVE-0020
 - `#inline`: AVE-0006, AVE-0007, AVE-0013, AVE-0015
-- `#keys`: AVE-0014
+- `#keys`: AVE-0014, AVE-0019
 - `#perf`: AVE-0018
 - `#rekey`: AVE-0009, AVE-0010
 - `#secrets`: AVE-0003, AVE-0004
-- `#site`: AVE-0016, AVE-0017
-- `#tooling`: AVE-0017, AVE-0018
-- `#ui`: AVE-0005, AVE-0006, AVE-0007, AVE-0008, AVE-0012, AVE-0014, AVE-0015
+- `#site`: AVE-0016, AVE-0017, AVE-0022
+- `#tooling`: AVE-0017, AVE-0018, AVE-0022
+- `#ui`: AVE-0005, AVE-0006, AVE-0007, AVE-0008, AVE-0012, AVE-0014, AVE-0015, AVE-0019, AVE-0020, AVE-0021

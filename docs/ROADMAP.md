@@ -1,16 +1,17 @@
 # Roadmap
 
-| # | Epic                    | Why here                                               |
-|---|-------------------------|--------------------------------------------------------|
-| 1 | Crypto core             | Everything else calls it; tests already written        |
-| 2 | Secrets                 | Every command needs a password and a vault ID          |
-| 3 | First release           | Encrypting a file and a value is the core promise      |
-| 4 | Read without writing    | Peek and virtual editing only decrypt, low risk        |
-| 5 | Safety and transparency | Transparent mode is only safe on top of the save guard |
-| 6 | Rekey                   | Rare, wide in effect; last                             |
-| 7 | Later                   | Promoted todos                                         |
-| 8 | Performance             | Measured by `make bench`; hot paths run on every edit  |
-| 9 | Code health             | Audit findings; safest after the speed fixes land      |
+| #  | Epic                        | Why here                                               |
+|----|-----------------------------|--------------------------------------------------------|
+| 1  | Crypto core                 | Everything else calls it; tests already written        |
+| 2  | Secrets                     | Every command needs a password and a vault ID          |
+| 3  | First release               | Encrypting a file and a value is the core promise      |
+| 4  | Read without writing        | Peek and virtual editing only decrypt, low risk        |
+| 5  | Safety and transparency     | Transparent mode is only safe on top of the save guard |
+| 6  | Rekey                       | Rare, wide in effect; last                             |
+| 7  | Later                       | Promoted todos                                         |
+| 8  | Performance                 | Measured by `make bench`; hot paths run on every edit  |
+| 9  | Code health                 | Audit findings; safest after the speed fixes land      |
+| 10 | Surface and discoverability | Fewer commands first; then the leak warning; docs last |
 
 ## 1. Crypto core
 
@@ -69,3 +70,12 @@
 ## 9. Code health
 
 **Done when:** `make ddd` and the unit tests pass and no `#BUG-` comments remain in `src/`.
+
+## 10. Surface and discoverability
+
+1. AVE-0019 - fewer commands; the leak diagnostic's quick fix and the docs build on them
+2. AVE-0020 - passive warning on top of the save guard
+3. AVE-0021 - documents the final command surface
+4. AVE-0022 - the demo video shows the finished surface, so it is recorded last
+
+**Done when:** the palette lists 13 Ansible Vault commands, a plaintext file matching `mustEncryptGlobs` shows a Problems entry, the walkthrough runs on a fresh profile, and the landing page plays the demo video.

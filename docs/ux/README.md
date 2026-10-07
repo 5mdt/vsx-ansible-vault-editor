@@ -16,6 +16,9 @@ Inside the editor every piece of UI is a module. The only page is the public lan
 - [save-guard-dialog](modules/save-guard-dialog.md)
 - [vault-marker](modules/vault-marker.md)
 - [decrypted-diff](modules/decrypted-diff.md)
+- [command-palette](modules/command-palette.md)
+- [leak-diagnostic](modules/leak-diagnostic.md)
+- [walkthrough](modules/walkthrough.md)
 
 ## Legend
 

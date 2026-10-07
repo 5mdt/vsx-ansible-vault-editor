@@ -20,6 +20,8 @@ As someone who has heard of the extension, I want one page that shows what it do
 - Both READMEs link to the deployed page at `https://5mdt.github.io/vsx-ansible-vault-editor/`.
 - The page supports light and dark colour schemes and a phone-width layout.
 
+> Planned: [AVE-0022](AVE-0022-demo-video.md) puts a recorded WebM in the page's demo slot and keeps `demo.gif` as its fallback and for the READMEs; the Behavior and Testing sections above are updated when it lands.
+
 ## Implementation
 
 - `scripts/site/build.mjs`: `buildSite({ root, outDir })` substitutes `{{version}}`, `{{commands}}`, `{{style}}`, `{{logo}}`, `{{favicon}}`, `{{demoWidth}}` and `{{demoHeight}}` in `site/index.html`, writes the result and `.nojekyll`, renders `changelog.html` from `docs/CHANGELOG.md` and `benchmarks.html` from the baseline, and copies `demo.gif`.
