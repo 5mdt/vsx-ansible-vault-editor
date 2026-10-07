@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ansible Vault Editor</title>
+<meta name="description" content="Encrypt, decrypt and edit Ansible Vault files and inline !vault values in VS Code and VSCodium.">
+<link rel="icon" type="image/png" href="{{favicon}}">
+<style>
+{{style}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <img src="{{logo}}" alt="Ansible Vault Editor logo">
+  <h1>Ansible Vault Editor</h1>
+  <div class="version">v{{version}}</div>
+  <p class="lead">Encrypt, decrypt and edit Ansible Vault files and inline <code>!vault</code> values without leaving the editor. Works in VS Code and VSCodium.</p>
+  <div class="buttons">
+    <a href="https://marketplace.visualstudio.com/items?itemName=5mdt.ansible-vault-editor">VS Code Marketplace</a>
+    <a href="https://open-vsx.org/extension/5mdt/ansible-vault-editor">Open VSX</a>
+    <a href="https://github.com/5mdt/vsx-ansible-vault-editor/releases/latest/download/ansible-vault-editor.vsix">Download .vsix</a>
+  </div>
+</header>
+
+<img class="demo" src="demo.gif" width="{{demoWidth}}" height="{{demoHeight}}" alt="Demo: encrypt a value, peek at it, edit decrypted, the save guard, rekey workspace and a decrypted diff">
+
+<h2>Features</h2>
+<ul class="features">
+  <li><strong>Files and inline values:</strong> encrypt, decrypt or toggle whole files and single YAML <code>!vault</code> values.</li>
+  <li><strong>Peek and edit decrypted:</strong> hover or CodeLens shows a value; edit it in a tab whose plaintext lives only in memory.</li>
+  <li><strong>Save guard and transparent mode:</strong> plaintext does not reach disk by accident; optionally decrypt on open and re-encrypt on save.</li>
+  <li><strong>Rekey:</strong> one file, or the whole workspace with a preview; vault ID support.</li>
+  <li><strong>Decrypted diffs:</strong> in Source Control and, optionally, in <code>git diff</code>.</li>
+  <li><strong>No Ansible needed:</strong> a native implementation of the <code>ansible-vault</code> format, byte-compatible with the real tool.</li>
+</ul>
+
+<h2>Install</h2>
+<p>Search for <strong>Ansible Vault Editor</strong> in the Extensions view, or:</p>
+<pre><code>code --install-extension 5mdt.ansible-vault-editor
+codium --install-extension 5mdt.ansible-vault-editor</code></pre>
+<p>Or <a href="https://github.com/5mdt/vsx-ansible-vault-editor/releases/latest/download/ansible-vault-editor.vsix">download the latest <code>.vsix</code></a> from GitHub Releases and install it from disk:</p>
+<pre><code>code --install-extension ansible-vault-editor.vsix</code></pre>
+
+<h2>Commands</h2>
+<p>None has a default key binding; every one can be bound.</p>
+<table>
+{{commands}}
+</table>
+</main>
+<footer>
+  <a href="https://github.com/5mdt/vsx-ansible-vault-editor">GitHub</a> ·
+  <a href="https://github.com/5mdt/vsx-ansible-vault-editor/blob/main/docs/CHANGELOG.md">Changelog</a> ·
+  <a href="https://github.com/5mdt/vsx-ansible-vault-editor/blob/main/LICENSE.md">GPL-3.0</a> ·
+  <a href="https://5mdt.github.io">More from 5mdt</a>
+</footer>
+</body>
+</html>

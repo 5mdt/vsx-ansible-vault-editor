@@ -1,6 +1,10 @@
 # UX docs
 
-The extension has no routed pages; every piece of UI is a module.
+Inside the editor every piece of UI is a module. The only page is the public landing page.
+
+## Pages
+
+- [landing-page](pages/landing-page.md)
 
 ## Modules
 

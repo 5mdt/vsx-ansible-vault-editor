@@ -29,6 +29,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from checks import ERROR, WARN, run_all  # noqa: E402
 from model import Corpus, TrackerEntry, code_refs  # noqa: E402
 
+VERSION = "2026-10-06T15:36:00Z"  # RFC 3339 date-time; bump on EVERY edit to this script (`date -u +%Y-%m-%dT%H:%M:%SZ`)
+
 TTY = sys.stdout.isatty()
 BOLD, DIM, RED, YELLOW, GREEN, RESET = (
     ("\033[1m", "\033[2m", "\033[31m", "\033[33m", "\033[32m", "\033[0m")
@@ -716,6 +718,7 @@ def main(argv: list[str] | None = None) -> int:
         epilog=MAIN_EPILOG,
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
+    p.add_argument("--version", action="version", version=f"ddd {VERSION}")
     sub = p.add_subparsers(dest="cmd")
 
     pc = sub.add_parser(

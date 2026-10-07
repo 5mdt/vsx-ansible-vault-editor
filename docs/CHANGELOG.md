@@ -1,6 +1,8 @@
 # Changelog
 
 ## Unreleased
+- #AVE-0017: `make logo` renders `extension/logo.pxo` to the 1x/2x/4x PNGs and a `favicon.ico`
+- #AVE-0016: landing page, an HTML file with inlined styles, logo and favicon and the demo GIF as a separate, size-pinned file, generated from `site/` and `package.json` (`make site`) and deployed to GitHub Pages (linked from both READMEs), with a direct link to the latest `.vsix` on GitHub Releases
 
 ## v1.0.1 (2026-10-05)
 

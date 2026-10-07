@@ -1,8 +1,8 @@
 # Docs-Driven Development Approach
 
-**Version:** 1.8 - **Last updated:** 2026-10-01
+**Version:** 1.9 - **Last updated:** 2026-10-06T15:36:00Z
 
-<!-- Bump both whenever this document's rules or templates change. -->
+<!-- Bump both whenever this document's rules or templates change. Timestamp: RFC 3339 UTC, `date -u +%Y-%m-%dT%H:%M:%SZ`. -->
 
 ## Glossary
 
@@ -334,7 +334,7 @@ Rules:
 
 - Newest releases first; within `## Unreleased`, newest entries first.
 - One line per user-visible change, keyed by feature or BUG ID. Internal debt and chores stay out.
-- On release, rename `## Unreleased` to the version/date and start a new `## Unreleased` section above it.
+- On release, rename `## Unreleased` to the version/date and start a new `## Unreleased` section above it. `scripts/release.sh` (`make release BUMP=patch|minor|major`) does this, after the gates, then commits and tags.
 
 ## Known trade-offs
 

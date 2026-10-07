@@ -6,12 +6,16 @@ Encrypt, decrypt and edit [Ansible Vault](https://docs.ansible.com/ansible/lates
 
 ## Install
 
-Search for **Ansible Vault Editor** in the Extensions view (VS Code Marketplace, or Open VSX for VSCodium), or install it from the command line:
+See the [landing page](https://5mdt.github.io/vsx-ansible-vault-editor/) for a demo and all download options.
+
+Search for **Ansible Vault Editor** in the Extensions view ([VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=5mdt.ansible-vault-editor), or [Open VSX](https://open-vsx.org/extension/5mdt/ansible-vault-editor) for VSCodium), or install it from the command line:
 
 ```sh
 code --install-extension 5mdt.ansible-vault-editor
 codium --install-extension 5mdt.ansible-vault-editor
 ```
+
+Or download the [latest `.vsix`](https://github.com/5mdt/vsx-ansible-vault-editor/releases/latest/download/ansible-vault-editor.vsix) from GitHub Releases and run `code --install-extension ansible-vault-editor.vsix` (`codium` for VSCodium).
 
 ## Requirements
 

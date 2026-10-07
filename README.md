@@ -13,9 +13,16 @@ VS Code / VSCodium extension for [Ansible Vault](https://docs.ansible.com/ansibl
 - decrypted diffs in Source Control and, optionally, in `git diff`
 - native implementation of the `ansible-vault` format; no Ansible install needed
 
+## Links
+
+- [Landing page](https://5mdt.github.io/vsx-ansible-vault-editor/)
+- [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=5mdt.ansible-vault-editor)
+- [Open VSX](https://open-vsx.org/extension/5mdt/ansible-vault-editor)
+- [Latest `.vsix`](https://github.com/5mdt/vsx-ansible-vault-editor/releases/latest/download/ansible-vault-editor.vsix)
+
 The Marketplace page, with the full feature description, settings and passwords, is [extension/README.md](extension/README.md); this file is for contributors.
 
-**Status:** v0.4.0; every feature in [docs/FRD.md](docs/FRD.md) is implemented. The contract lives there; the workflow is described in [docs/DOCS-DRIVEN-DEVELOPMENT.md](docs/DOCS-DRIVEN-DEVELOPMENT.md).
+**Status:** v1.0.1; every feature in [docs/FRD.md](docs/FRD.md) is implemented. The contract lives there; the workflow is described in [docs/DOCS-DRIVEN-DEVELOPMENT.md](docs/DOCS-DRIVEN-DEVELOPMENT.md).
 
 ## Layout
 

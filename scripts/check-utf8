@@ -14,6 +14,8 @@ Suppress a finding with a marker in the file's own comment syntax:
 import sys
 import unicodedata
 
+VERSION = "2026-10-06T15:36:00Z"  # RFC 3339 date-time; bump on EVERY edit to this script (`date -u +%Y-%m-%dT%H:%M:%SZ`)
+
 IGNORE = "check-utf8: ignore"
 IGNORE_NEXT = "check-utf8: ignore-next-line"
 
@@ -144,6 +146,9 @@ def check(path: str, fix: bool) -> int:
 def main() -> int:
     """Check all files given on the command line."""
     args = sys.argv[1:]
+    if "--version" in args:
+        print(f"check-utf8 {VERSION}")
+        return 0
     fix = "--fix" in args
     paths = [arg for arg in args if arg != "--fix"]
     return 1 if sum(check(path, fix) for path in paths) else 0

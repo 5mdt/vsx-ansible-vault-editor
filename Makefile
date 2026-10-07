@@ -1,4 +1,4 @@
-.PHONY: all ddd roadmap release install compile watch lint test test-unit test-integration test-extension screenshots screenshots-publish package publish-vsce publish-ovsx clean
+.PHONY: all logo site ddd roadmap release install compile watch lint test test-unit test-integration test-extension screenshots screenshots-publish package publish-vsce publish-ovsx clean
 
 VSIX = build/ansible-vault-editor.vsix
 BUMP ?= minor
@@ -43,6 +43,13 @@ screenshots: compile
 screenshots-publish:
 	mkdir -p extension/media
 	cp build/screenshots/demo.gif extension/media/
+
+logo:
+	python3 scripts/logo/pxo2png.py extension/logo.pxo build/logo
+
+site:
+	rm -rf build/site
+	node scripts/site/build.mjs build/site
 
 package: compile
 	npx vsce package --no-dependencies --readme-path extension/README.md --baseImagesUrl $(IMAGES_URL) --out $(VSIX)
