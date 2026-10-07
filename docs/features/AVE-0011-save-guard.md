@@ -47,6 +47,7 @@ See [save-guard-dialog](../ux/modules/save-guard-dialog.md), [vault-marker](../u
 ### Unit
 
 - Guard signals and the three settings.
+- One save parses the text once: reasons, plan and snapshot share the parse, and a `plain` override skips the reasons (#BUG-0007).
 
 ### Integration
 

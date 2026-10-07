@@ -18,7 +18,7 @@
 │  Features    (list)                                   │
 │  Commands    (table from package.json)                │
 │                                                       │
-│  GitHub · Changelog · Benchmarks · License · More from 5mdt        │
+│  GitHub - Changelog - Benchmarks - License - More from 5mdt        │
 └───────────────────────────────────────────────────────┘
 ```
 

@@ -89,7 +89,7 @@ export function toggleMarkerEdit(
   offset: number,
   eol: "\n" | "\r\n",
 ): { start: number; end: number; newText: string } | undefined {
-  // #BUG-0007: parseMarkers and inlineTargets below each parse the whole text.
+  // #BUG-0007: inlineTargets is memoized, so the two calls below share one parse.
   const markers = parseMarkers(text);
   const hit = markers.values.find((v) => offset >= v.start && offset <= v.end);
   if (hit) {

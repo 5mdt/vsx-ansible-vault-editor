@@ -19,6 +19,7 @@ flowchart TD
 ```
 
 - The scan finds vaulted files (by header) and `!vault` blocks, skipping `files.exclude` and `ansibleVault.rekeyExclude` globs.
+- The scan reads files with bounded parallelism (about 8 at a time), looks up open documents through a map keyed by URI, and skips files over 1 MB. A small prefix read rejects binary files (a NUL byte) before the whole file is read; files with no vault marker are skipped, and results keep the order of the file listing. #BUG-0010
 - The preview ([rekey-preview](../ux/modules/rekey-preview.md)) lists files with block counts and can filter by vault ID.
 - Per-file atomicity from [AVE-0009](AVE-0009-rekey.md); a file that fails is left untouched and listed in the report.
 - Runs under a progress notification with Cancel; cancelling applies nothing.
@@ -47,6 +48,7 @@ See [rekey-preview](../ux/modules/rekey-preview.md), [vault-id-picker](../ux/mod
 ### Unit
 
 - Exclusion globs; vault ID filter; cancel applies nothing.
+- Bounded-parallel map keeps result order and never exceeds its limit; binary prefix detection (#BUG-0010).
 
 ### Integration
 

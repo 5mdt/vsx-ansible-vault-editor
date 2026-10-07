@@ -1,6 +1,6 @@
 // #AVE-0003: read one secret source, a plain file or an executable.
 
-import { accessSync, constants, readFileSync, statSync } from "node:fs";
+import { access, constants, readFile, stat } from "node:fs/promises";
 import { spawnRunner, type Runner } from "../vault/backend";
 
 export class SourceError extends Error {
@@ -17,10 +17,11 @@ export interface ReadSourceOptions {
   run?: Runner;
 }
 
-function isExecutable(path: string): boolean {
+// #BUG-0008
+async function isExecutable(path: string): Promise<boolean> {
   try {
-    if (!statSync(path).isFile()) return false;
-    accessSync(path, constants.X_OK);
+    if (!(await stat(path)).isFile()) return false;
+    await access(path, constants.X_OK);
     return true;
   } catch {
     return false;
@@ -28,16 +29,16 @@ function isExecutable(path: string): boolean {
 }
 
 /** Ansible passes --vault-id to scripts named `*-client[.ext]`. */
-function isClientScript(path: string): boolean {
+export function isClientScript(path: string): boolean {
   const base = path.split("/").pop() ?? path;
   const dot = base.lastIndexOf(".");
   return (dot > 0 ? base.slice(0, dot) : base).endsWith("-client");
 }
 
-// #AVE-0003
+// #AVE-0003, #BUG-0008
 export async function readSource(o: ReadSourceOptions): Promise<string> {
   let secret: string;
-  if (isExecutable(o.path)) {
+  if (await isExecutable(o.path)) {
     if (!o.trusted) {
       throw new SourceError(
         `${o.path}: not run, the workspace is untrusted`,
@@ -56,7 +57,7 @@ export async function readSource(o: ReadSourceOptions): Promise<string> {
     secret = res.stdout.toString("utf8").replace(/[\r\n]+$/, "");
   } else {
     try {
-      secret = readFileSync(o.path, "utf8").trim();
+      secret = (await readFile(o.path, "utf8")).trim();
     } catch {
       throw new SourceError(`${o.path}: could not read password file`);
     }

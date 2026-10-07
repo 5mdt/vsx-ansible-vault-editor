@@ -90,11 +90,22 @@ export interface Targets {
   ok: boolean;
 }
 
-// #AVE-0006
+// #BUG-0007: single-entry memo; status, providers and the save guard all ask about the same text.
+let last: { text: string; result: Targets } | undefined;
+
+// #AVE-0006, #BUG-0006, #BUG-0007
 export function inlineTargets(text: string): Targets {
+  if (last && last.text === text) return last.result;
+  const result = parseTargets(text);
+  last = { text, result };
+  return result;
+}
+
+// #AVE-0006, #BUG-0006
+function parseTargets(text: string): Targets {
   const targets: ValueTarget[] = [];
-  // #BUG-0006: yaml's duplicate-key check makes this quadratic on big maps; `uniqueKeys: false` fixes it.
-  const docs = parseAllDocuments(text, { logLevel: "silent" });
+  // #BUG-0006: yaml's duplicate-key check is quadratic on big flat maps, so it is off; duplicates are accepted.
+  const docs = parseAllDocuments(text, { logLevel: "silent", uniqueKeys: false });
 
   const walk = (node: Node | null | undefined, path: string, indent: number): void => {
     if (!node || isAlias(node)) return;

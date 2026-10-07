@@ -4,7 +4,7 @@ import { spawn } from "node:child_process";
 import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { decrypt, encrypt, VaultAuthError, VaultFormatError } from "./format";
+import { decryptAsync, encryptAsync, VaultAuthError, VaultFormatError } from "./format";
 
 export interface BackendEncryptOptions {
   vaultId?: string;
@@ -29,19 +29,18 @@ export interface VaultBackend {
   ): Promise<string>;
 }
 
-// #AVE-0002
-// #BUG-0008: async in name only; the crypto underneath is synchronous.
+// #AVE-0002, #BUG-0008
 export class NativeBackend implements VaultBackend {
   async encrypt(
     plain: Buffer | string,
     password: string,
     opts: BackendEncryptOptions = {},
   ): Promise<string> {
-    return encrypt(plain, password, opts);
+    return encryptAsync(plain, password, opts);
   }
 
   async decrypt(text: string, password: string) {
-    return decrypt(text, password);
+    return decryptAsync(text, password);
   }
 
   // #BUG-0015: only tests call rekey; the commands decrypt and seal themselves.
@@ -51,8 +50,8 @@ export class NativeBackend implements VaultBackend {
     newPassword: string,
     opts: BackendEncryptOptions = {},
   ): Promise<string> {
-    const { plaintext, vaultId } = decrypt(text, oldPassword);
-    return encrypt(plaintext, newPassword, { vaultId, ...opts });
+    const { plaintext, vaultId } = await decryptAsync(text, oldPassword);
+    return encryptAsync(plaintext, newPassword, { vaultId, ...opts });
   }
 }
 

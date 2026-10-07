@@ -4,10 +4,12 @@ import {
   createCipheriv,
   createDecipheriv,
   createHmac,
+  pbkdf2,
   pbkdf2Sync,
   randomBytes,
   timingSafeEqual,
 } from "node:crypto";
+import { promisify } from "node:util";
 
 export type VaultVersion = "1.1" | "1.2";
 
@@ -58,14 +60,25 @@ function strictHex(text: string, what: string): Buffer {
   return Buffer.from(text, "hex");
 }
 
-function deriveKeys(password: string, salt: Buffer) {
-  // #BUG-0008: synchronous, about 15 ms per call on the extension host; use the async `pbkdf2`.
-  const key = pbkdf2Sync(password, salt, ITERATIONS, 80, "sha256");
+const pbkdf2Async = promisify(pbkdf2);
+
+function splitKey(key: Buffer) {
   return {
     cipherKey: key.subarray(0, 32),
     hmacKey: key.subarray(32, 64),
     iv: key.subarray(64, 80),
   };
+}
+
+// #BUG-0008
+function deriveKeys(password: string, salt: Buffer) {
+  return splitKey(pbkdf2Sync(password, salt, ITERATIONS, 80, "sha256"));
+}
+
+/** Off the main thread: the libuv pool does the 10000 iterations. */
+// #BUG-0008
+async function deriveKeysAsync(password: string, salt: Buffer) {
+  return splitKey(await pbkdf2Async(password, salt, ITERATIONS, 80, "sha256"));
 }
 
 function pad(data: Buffer): Buffer {
@@ -115,19 +128,17 @@ export function parseEnvelope(text: string): Envelope {
   };
 }
 
-// #AVE-0001
-export function encrypt(
-  plaintext: Buffer | string,
-  password: string,
-  opts: EncryptOptions = {},
-): string {
-  const { vaultId } = opts;
+function checkVaultId(vaultId: string | undefined): void {
   if (vaultId !== undefined && (vaultId === "" || /[;\s]/.test(vaultId))) {
     throw new VaultFormatError("header", "invalid vault id");
   }
+}
+
+type Keys = ReturnType<typeof splitKey>;
+
+function seal(plaintext: Buffer | string, salt: Buffer, keys: Keys, opts: EncryptOptions): string {
+  const { cipherKey, hmacKey, iv } = keys;
   const eol = opts.eol ?? "\n";
-  const salt = opts.salt ?? randomBytes(32);
-  const { cipherKey, hmacKey, iv } = deriveKeys(password, salt);
   const data = typeof plaintext === "string" ? Buffer.from(plaintext) : plaintext;
   const cipher = createCipheriv("aes-256-ctr", cipherKey, iv);
   const ciphertext = Buffer.concat([cipher.update(pad(data)), cipher.final()]);
@@ -135,20 +146,15 @@ export function encrypt(
   const inner = [salt, hmac, ciphertext].map((b) => b.toString("hex")).join("\n");
   const body = Buffer.from(inner, "utf8").toString("hex");
   const header =
-    vaultId === undefined
+    opts.vaultId === undefined
       ? `${MAGIC};1.1;${CIPHER}`
-      : `${MAGIC};1.2;${CIPHER};${vaultId}`;
+      : `${MAGIC};1.2;${CIPHER};${opts.vaultId}`;
   const wrapped = body.match(new RegExp(`.{1,${WRAP}}`, "g")) ?? [];
   return [header, ...wrapped].join(eol) + eol;
 }
 
-// #AVE-0001
-export function decrypt(
-  text: string,
-  password: string,
-): { plaintext: Buffer; vaultId?: string } {
-  const env = parseEnvelope(text);
-  const { cipherKey, hmacKey, iv } = deriveKeys(password, env.salt);
+function openEnvelope(env: Envelope, keys: Keys): { plaintext: Buffer; vaultId?: string } {
+  const { cipherKey, hmacKey, iv } = keys;
   const expected = createHmac("sha256", hmacKey).update(env.ciphertext).digest();
   if (
     expected.length !== env.hmac.length ||
@@ -162,4 +168,46 @@ export function decrypt(
     decipher.final(),
   ]);
   return { plaintext: unpad(padded), vaultId: env.vaultId };
+}
+
+/** Synchronous; blocks for about 15 ms. Prefer `encryptAsync` on the extension host. */
+// #AVE-0001
+export function encrypt(
+  plaintext: Buffer | string,
+  password: string,
+  opts: EncryptOptions = {},
+): string {
+  checkVaultId(opts.vaultId);
+  const salt = opts.salt ?? randomBytes(32);
+  return seal(plaintext, salt, deriveKeys(password, salt), opts);
+}
+
+// #AVE-0001, #BUG-0008
+export async function encryptAsync(
+  plaintext: Buffer | string,
+  password: string,
+  opts: EncryptOptions = {},
+): Promise<string> {
+  checkVaultId(opts.vaultId);
+  const salt = opts.salt ?? randomBytes(32);
+  return seal(plaintext, salt, await deriveKeysAsync(password, salt), opts);
+}
+
+/** Synchronous; blocks for about 15 ms. Prefer `decryptAsync` on the extension host. */
+// #AVE-0001
+export function decrypt(
+  text: string,
+  password: string,
+): { plaintext: Buffer; vaultId?: string } {
+  const env = parseEnvelope(text);
+  return openEnvelope(env, deriveKeys(password, env.salt));
+}
+
+// #AVE-0001, #BUG-0008
+export async function decryptAsync(
+  text: string,
+  password: string,
+): Promise<{ plaintext: Buffer; vaultId?: string }> {
+  const env = parseEnvelope(text);
+  return openEnvelope(env, await deriveKeysAsync(password, env.salt));
 }

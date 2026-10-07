@@ -55,3 +55,25 @@ export function previewTitle(entries: ScanEntry[]): string {
   const blocks = entries.reduce((n, e) => n + (e.kind === "blocks" ? e.count : 0), 0);
   return `Rekey workspace: ${entries.length} files, ${blocks} blocks`;
 }
+
+/**
+ * Map `items` with at most `limit` calls in flight; results keep input order.
+ * #BUG-0010, #AVE-0010
+ */
+export async function mapLimit<T, R>(items: readonly T[], limit: number, fn: (item: T) => Promise<R>): Promise<R[]> {
+  const out = new Array<R>(items.length);
+  let next = 0;
+  const worker = async () => {
+    while (next < items.length) {
+      const i = next++;
+      out[i] = await fn(items[i]!);
+    }
+  };
+  await Promise.all(Array.from({ length: Math.max(1, Math.min(limit, items.length)) }, worker));
+  return out;
+}
+
+/** True when a file's leading bytes contain a NUL: binary, never vaulted text. #BUG-0010, #AVE-0010 */
+export function looksBinary(prefix: Uint8Array): boolean {
+  return prefix.includes(0);
+}

@@ -5,6 +5,8 @@ import {
   VaultAuthError,
   VaultFormatError,
   decrypt,
+  decryptAsync,
+  encryptAsync,
   encrypt,
   parseEnvelope,
 } from "../../src/vault/format";
@@ -253,5 +255,23 @@ describe("line endings", () => {
     const data = "a\r\nb\n";
     const text = encrypt(data, PASSWORD, { eol: "\r\n" });
     expect(decrypt(text, PASSWORD).plaintext.toString("utf8")).toBe(data);
+  });
+});
+
+// #BUG-0008, #AVE-0001
+describe("async crypto", () => {
+  it("encryptAsync output decrypts with the sync and async paths", async () => {
+    const salt = Buffer.alloc(32, 7);
+    const text = await encryptAsync("hello", "pw", { vaultId: "prod", salt });
+    expect(text).toBe(encrypt("hello", "pw", { vaultId: "prod", salt }));
+    expect(decrypt(text, "pw").plaintext.toString()).toBe("hello");
+    const out = await decryptAsync(text, "pw");
+    expect(out.plaintext.toString()).toBe("hello");
+    expect(out.vaultId).toBe("prod");
+  });
+
+  it("decryptAsync rejects a wrong password with VaultAuthError", async () => {
+    const text = await encryptAsync("x", "pw");
+    await expect(decryptAsync(text, "nope")).rejects.toBeInstanceOf(VaultAuthError);
   });
 });

@@ -64,12 +64,6 @@
 
 ## 8. Performance
 
-1. BUG-0006 - detection is quadratic in file size; a one-option fix in the yaml parse
-2. BUG-0007 - parse once per event; builds on the faster parse
-3. BUG-0009 - password sources are re-read on every decrypt
-4. BUG-0008 - async crypto and no blocking calls on the extension host
-5. BUG-0010 - the workspace rekey scan reads files serially
-
 **Done when:** `make bench` shows detection linear in file size, and a cursor move on a 4k-line file takes under 20 ms.
 
 ## 9. Code health

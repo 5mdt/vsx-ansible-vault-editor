@@ -1,7 +1,7 @@
 // #AVE-0012: local detection of vaulted files and inline blocks; never needs a password.
 
 import { inlineTargets, type ValueTarget } from "./inline/yaml-values";
-import { parseMarkers } from "./transparent/markers";
+import { parseMarkers, type Markers } from "./transparent/markers";
 
 export interface VaultBlock {
   start: number;
@@ -53,9 +53,12 @@ export interface DocumentState {
   hasMarker: boolean;
   /** Status bar text, undefined when nothing is vaulted. */
   status?: string;
+  /** The blocks and markers found while describing; undefined for a vaulted file (#BUG-0007). */
+  blocks?: VaultBlock[];
+  markers?: Markers;
 }
 
-// #AVE-0012
+// #AVE-0012, #BUG-0007
 export function describeDocument(text: string, offset: number): DocumentState {
   const file = fileVaultId(text);
   if (file) {
@@ -66,7 +69,6 @@ export function describeDocument(text: string, offset: number): DocumentState {
       status: `🔒 ${file.vaultId ?? "vault"}`,
     };
   }
-  // #BUG-0007: findVaultBlocks and parseMarkers each parse the whole text, and ui/status.ts then parses both again; parse once and share.
   const blocks = findVaultBlocks(text);
   const markers = parseMarkers(text);
   return {
@@ -74,5 +76,7 @@ export function describeDocument(text: string, offset: number): DocumentState {
     inVaultBlock: blockAt(blocks, offset) !== undefined,
     hasMarker: !!markers.file || markers.values.length > 0,
     status: blocks.length ? `🔒 ${blocks.length} inline` : undefined,
+    blocks,
+    markers,
   };
 }

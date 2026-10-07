@@ -71,7 +71,7 @@ publish-vsce: package
 publish-ovsx: package
 	npx ovsx publish $(VSIX)
 
-# Gate, regenerate the demo GIF (SKIP_SCREENSHOTS=1 to skip), bump package.json, move CHANGELOG "Unreleased" into a version section, commit and tag. Nothing is pushed.
+# Full release: formatters, lint, tests, benchmarks, logo, site, demo GIF, version bump, vsix package, commit and tag. Nothing is pushed.
 release:
 	./scripts/release.sh $(BUMP)
 

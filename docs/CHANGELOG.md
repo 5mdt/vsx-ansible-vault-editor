@@ -1,6 +1,11 @@
 # Changelog
 
 ## Unreleased
+- Rekey Workspace scan reads files in parallel and skips binaries cheaply.
+- Vault encryption, file reads and the diff helper no longer block the extension host.
+- Password scripts and secret sources are read once per resolver (cached 30 s, cleared on config change) instead of once per block.
+- Cursor moves and saves reuse one parse of the document instead of four to six.
+- Detection is linear in file size (about 50 ms for 4k lines, was 280 ms); duplicate YAML keys no longer disable inline edits.
 - #AVE-0018: `make bench` runs benchmarks for crypto, detection, rekey and the decrypted diff view and compares them with a committed baseline (`make bench-baseline`)
 - #AVE-0017: `make logo` renders `extension/logo.pxo` to the 1x/2x/4x PNGs and a `favicon.ico`
 - #AVE-0016: landing page, an HTML file with inlined styles, logo and favicon and the demo GIF as a separate, size-pinned file, generated from `site/` and `package.json` (`make site`) and deployed to GitHub Pages (linked from both READMEs), with a direct link to the latest `.vsix` on GitHub Releases, and the changelog published next to it as `changelog.html` and the benchmark baseline as `benchmarks.html`

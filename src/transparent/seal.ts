@@ -6,7 +6,7 @@ import { fileVaultId } from "../detect";
 import { inlineTargets, vaultBlockText } from "../inline/yaml-values";
 import type { Snapshot } from "../guard/snapshot";
 import type { VaultBackend } from "../vault/backend";
-import { parseMarkers, stripFileMarker } from "./markers";
+import { parseMarkers, stripFileMarker, type Markers } from "./markers";
 
 export interface CacheEntry {
   hash: string;
@@ -57,10 +57,14 @@ async function sealItem(
 }
 
 /** Whole file when it was a vaulted file, is marked as one, or must be encrypted and has no block history. */
-// #AVE-0011
-// #BUG-0007: parseMarkers parses the text; planSave parses it again right after.
-export function wholeFile(text: string, snap: Snapshot, globMatch: boolean): boolean {
-  return !!snap.file || !!parseMarkers(text).file || (globMatch && snap.blocks.size === 0);
+// #AVE-0011, #BUG-0007
+export function wholeFile(
+  text: string,
+  snap: Snapshot,
+  globMatch: boolean,
+  markers: Markers = parseMarkers(text),
+): boolean {
+  return !!snap.file || !!markers.file || (globMatch && snap.blocks.size === 0);
 }
 
 // #AVE-0011, #AVE-0013
@@ -72,11 +76,10 @@ export async function planSave(
   deps: SealDeps,
 ): Promise<Plan> {
   if (fileVaultId(text)) return { ok: true, newText: text, cache };
-  // #BUG-0007: see wholeFile; markers are parsed twice per save.
   const markers = parseMarkers(text);
   const next: SealCache = new Map();
   try {
-    if (wholeFile(text, snap, globMatch)) {
+    if (wholeFile(text, snap, globMatch, markers)) {
       const plain = markers.file ? stripFileMarker(text, markers.file) : text;
       const id = snap.file?.vaultId ?? markers.file?.vaultId ?? (deps.defaultVaultId || undefined);
       return { ok: true, newText: await sealItem("", plain, id, deps, cache, next), cache: next };

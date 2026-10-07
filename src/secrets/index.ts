@@ -91,7 +91,7 @@ export function createResolver(
   context: vscode.ExtensionContext,
   channel: vscode.OutputChannel,
 ): SecretResolver {
-  return new SecretResolver({
+  const resolver = new SecretResolver({
     get passwordFile() {
       return (
         vscode.workspace.getConfiguration("ansibleVault").get<string>("passwordFile") ||
@@ -110,6 +110,15 @@ export function createResolver(
     prompt: promptForPassword,
     report: (m) => channel.appendLine(m),
   });
+  // #BUG-0009: source reads are cached per resolver; settings and trust changes drop them.
+  context.subscriptions.push(
+    vscode.workspace.onDidChangeConfiguration((e) => {
+      if (e.affectsConfiguration("ansibleVault")) resolver.invalidate();
+    }),
+    vscode.workspace.onDidGrantWorkspaceTrust(() => resolver.invalidate()),
+    vscode.workspace.onDidChangeWorkspaceFolders(() => resolver.invalidate()),
+  );
+  return resolver;
 }
 
 const NEW_ID = "New vault ID...";

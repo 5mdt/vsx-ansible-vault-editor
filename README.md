@@ -76,7 +76,7 @@ make release BUMP=minor   # patch | minor | major, default minor
 git push --follow-tags
 ```
 
-`make release` must run on a clean `main`. It runs pre-commit, `ddd check`, lint, unit and integration tests (ansible-vault required); regenerates `extension/media/demo.gif` with `make screenshots` (needs a display and `ffmpeg`; `SKIP_SCREENSHOTS=1` skips it); renames `## Unreleased` in `docs/CHANGELOG.md` to the new version; bumps `package.json` and the lockfile; then commits the GIF with them as `release vX.Y.Z` and tags it. Nothing is pushed. The first release is `v0.1.0`.
+`make release` must run on a clean `main`. It runs pre-commit (formatters), `ddd check`, lint, unit and integration tests (ansible-vault required), benchmarks, logo and site generation; always regenerates `extension/media/demo.gif` with `make screenshots` (needs a display and `ffmpeg`); renames `## Unreleased` in `docs/CHANGELOG.md` to the new version; bumps `package.json` and the lockfile; builds the `.vsix` into `build/`; then commits the GIF with them as `release vX.Y.Z` and tags it. Nothing is pushed. The first release is `v0.1.0`.
 
 Pushing a `v*` tag attaches the `.vsix` to a GitHub release and publishes to the Marketplace and Open VSX from GitHub Actions. A registry whose secret (`VSCE_PAT`, `OVSX_PAT`) is not set is skipped with a notice, not an error.
 

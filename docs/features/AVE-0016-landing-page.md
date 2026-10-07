@@ -47,7 +47,7 @@ See [landing-page](../ux/pages/landing-page.md).
 
 - The build writes `index.html` with the `package.json` version and one row per contributed command, and leaves no `{{` placeholder.
 - The output is only `index.html`, `changelog.html`, `benchmarks.html`, `demo.gif` and `.nojekyll`; the page has an inline `<style>`, a PNG favicon as a `data:` URI, and the only relative reference is `demo.gif` with the GIF's real `width` and `height`; a missing asset makes the build throw.
-- `changelog.html` has one heading per changelog section, escapes HTML, renders `` `code` `` as `<code>`, and is linked from the footer of `index.html`.
+- `changelog.html` has one heading per changelog section, escapes HTML, renders backtick code spans as `<code>`, and is linked from the footer of `index.html`.
 - `benchmarks.html` has one table row per file in `test/bench/baseline/`, is linked from the footer of `index.html`, and a build with no baseline files throws.
 - Both marketplace URLs and the latest-release `.vsix` URL are present in the output.
 

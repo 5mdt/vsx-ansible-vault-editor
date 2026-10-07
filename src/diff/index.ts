@@ -1,6 +1,6 @@
 // #AVE-0015: Open Decrypted Changes, and the opt-in `git diff` driver.
 
-import { execFile, spawnSync } from "node:child_process";
+import { execFile } from "node:child_process";
 import { copyFile, mkdir, readFile, writeFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import * as path from "node:path";
@@ -169,8 +169,10 @@ export function registerDiff(context: vscode.ExtensionContext, resolver: SecretR
       const folder = await folderFor();
       const cwd = folder.uri.fsPath;
       const attrs = await attributesFile(cwd);
-      // #BUG-0008: blocks the extension host; use the async `execFile` already imported here.
-      if (spawnSync("node", ["--version"]).status !== 0) {
+      // #BUG-0008: async so the extension host stays responsive.
+      try {
+        await run("node", ["--version"]);
+      } catch {
         throw new RefusedError("the git driver needs `node` on the PATH");
       }
       const pick = await vscode.window.showWarningMessage(

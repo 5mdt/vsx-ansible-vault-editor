@@ -39,6 +39,8 @@ db_password: !vault |
 - Decision: a selection must lie inside one scalar; that whole scalar is encrypted, so a partial selection never drops the rest of the value. A selection spanning several nodes is refused.
 - Decision: decrypt emits the first form that round-trips through the YAML parser to the exact text: plain, then (multi-line text only) literal block (`|`, `|-`, `|+`), then double-quoted.
 - Decision: values are located with a YAML-aware parser that keeps ranges, not regexes, so comments and anchors survive.
+- Decision (#BUG-0006): a duplicate mapping key does not make the text unusable. The parser's duplicate-key check is off because it is quadratic on large flat maps; a file with a repeated key still yields its targets and edits stay enabled. Any other YAML error still disables edits. Ansible keeps the last duplicate, so edits address each occurrence by its own range.
+- Decision (#BUG-0007): the parse result is memoized on the last text, so every caller on the same text (status, folding, CodeLens, code actions, save guard) shares one parse.
 
 ## Testing
 
@@ -51,6 +53,9 @@ db_password: !vault |
 - Scalars with colons, quotes, `#`, leading spaces, multiline text round-trip.
 - Indentation for nested maps and list items.
 - CRLF file keeps CRLF in the block.
+- A file with a duplicate key still yields targets and is `ok`; a syntax error is not `ok` (#BUG-0006).
+- Locating targets in a 16k-line flat map stays linear, not quadratic (#BUG-0006).
+- Repeated calls on the same text parse once (#BUG-0007).
 
 ### Integration
 

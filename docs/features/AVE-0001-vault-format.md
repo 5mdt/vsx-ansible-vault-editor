@@ -34,6 +34,8 @@ flowchart LR
 
 ## Quirks & Decisions
 
+- Decision: key derivation (`pbkdf2`, 10000 iterations, about 15 ms) has an async form, `encryptAsync` / `decryptAsync`, that runs on the libuv pool instead of the extension host thread (#BUG-0008). The sync `encrypt` / `decrypt` remain for tests and tools that need them and produce identical output.
+
 - Decision: only `AES256` is supported; any other cipher name is rejected with a clear error.
 - Decision: a vault ID containing `;` or whitespace is rejected on encrypt with a `header` format error, since it would corrupt the header line.
 

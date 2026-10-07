@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Cut a release: gate, regenerate the demo gif, bump package.json, move CHANGELOG "Unreleased" into a version section, commit, tag.
-# Usage: scripts/release.sh patch|minor|major   (SKIP_SCREENSHOTS=1 to keep the committed demo.gif)
+# Cut a release: formatters (pre-commit), lint, tests, benchmarks, logo, site, demo gif, bump package.json, move CHANGELOG "Unreleased" into a version section, package the vsix, commit, tag.
+# Usage: scripts/release.sh patch|minor|major
 # Nothing is pushed. Pushing the v* tag runs .github/workflows/publish.yml (Marketplace + Open VSX).
 set -euo pipefail
 
@@ -37,12 +37,14 @@ pre-commit run --all-files || die "pre-commit failed"
 npm run lint
 npm run test:unit
 AVE_REQUIRE_ANSIBLE=1 npm run test:integration
+make bench
+
+# --- logo and site ----------------------------------------------------------
+make logo site
 
 # --- demo gif ---------------------------------------------------------------
-# Needs a display and ffmpeg; SKIP_SCREENSHOTS=1 keeps the committed demo.gif as is.
-if [ -z "${SKIP_SCREENSHOTS:-}" ]; then
-  make screenshots screenshots-publish
-fi
+# Needs a display and ffmpeg. Always regenerated so the packaged vsix carries a fresh demo.gif.
+make screenshots screenshots-publish
 
 # --- changelog and version --------------------------------------------------
 grep -qx '## Unreleased' "$changelog" || die "$changelog has no '## Unreleased' section"
@@ -62,6 +64,9 @@ grep -qxF "$heading" "$changelog" || die "version heading missing from $changelo
 # The publish workflow requires the tag to equal v<package.json version>.
 [ "$(node -p "require('./package.json').version")" = "${next#v}" ] ||
   npm version "${next#v}" --no-git-tag-version >/dev/null
+
+# --- build and package (after the bump so the vsix carries the new version) ---
+make package
 
 # --- commit and tag ---------------------------------------------------------
 git add "${files[@]}"

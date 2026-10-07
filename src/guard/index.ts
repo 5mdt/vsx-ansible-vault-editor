@@ -123,7 +123,7 @@ export function registerSaveGuard(
 
   /** The text to write instead of the buffer, or undefined to write the buffer as it is. */
   const safeText = async (doc: vscode.TextDocument, st: DocState): Promise<string | undefined> => {
-    // #BUG-0007: guardReasons, planSave and snapshot each parse the text again; reasons are computed before `allow === "plain"` is checked.
+    // #BUG-0007: inlineTargets is memoized, so reasons and plan share one parse; `plain` skips the reasons.
     const text = doc.getText();
     if (st.override !== undefined) {
       const rekeyed = st.override;
@@ -134,11 +134,11 @@ export function registerSaveGuard(
     const { mode, transparent, globs, defaultVaultId } = settings();
     let decision: "save" | "encrypt" | "dialog";
     const glob = globMatch(doc, globs);
-    const reasons = guardReasons(text, st.snap, glob);
     if (st.allow === "plain") {
       st.allow = undefined;
       return undefined;
     }
+    const reasons = guardReasons(text, st.snap, glob);
     if (st.allow === "encrypt") {
       st.allow = undefined;
       decision = reasons.length ? "encrypt" : "save";

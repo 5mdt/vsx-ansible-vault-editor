@@ -37,6 +37,8 @@ flowchart TD
 
 ## Quirks & Decisions
 
+- Decision: source reads are cached per resolver (#BUG-0009). A password file or script runs at most once per cache lifetime, however many blocks or labels a decrypt touches; a failing source is reported once. The cache is dropped when `ansibleVault.*` settings, workspace trust or workspace folders change, on "Forget cached passwords", and after 30 s. File and `ansible.cfg` reads are asynchronous (#BUG-0008); `hasSourceFor` stays synchronous and reads `ansible.cfg` itself only if nothing has loaded it yet.
+
 - Decision: in an untrusted workspace, executable sources (named by workspace settings or a workspace `ansible.cfg`) are not run. The skip is reported and the lookup continues, so opening a repo never runs its code. `package.json` declares `untrustedWorkspaces: limited`.
 - Decision: a secret entered at the prompt is stored only after it decrypted something (or right away on encrypt), so a typo is never remembered.
 - Decision: a secret that fails is dropped from the session cache and the prompt reopens in its "does not match" state.
@@ -56,6 +58,7 @@ See [password-prompt](../ux/modules/password-prompt.md).
 - Each step wins over the ones after it.
 - cfg discovery order; `vault_identity_list` parsing.
 - Script secret is trimmed; non-zero exit falls through.
+- A password script runs once across many `candidates()` / `labels()` calls; `invalidate()` makes it run again.
 
 ### Integration
 

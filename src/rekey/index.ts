@@ -1,5 +1,6 @@
 // #AVE-0009, #AVE-0010: the rekey commands.
 
+import { open as fsOpen } from "node:fs/promises";
 import * as path from "node:path";
 import * as vscode from "vscode";
 import type { GuardHandle } from "../guard";
@@ -11,7 +12,7 @@ import { decryptQuiet, decryptWithSecrets, knownVaultIds } from "../secrets/vaul
 import { getBackend } from "../vault";
 import { replaceWholeDocument } from "../vscode-util";
 import { itemsIn, rekeyMany, rekeyText, selectBlocks, type RekeyDeps } from "./rekey";
-import { excludeGlob, filterById, idCounts, previewTitle, scanText, type ScanEntry } from "./scan";
+import { excludeGlob, filterById, idCounts, looksBinary, mapLimit, previewTitle, scanText, type ScanEntry } from "./scan";
 
 // #BUG-0013: MAX_SCAN is defined in four files.
 const MAX_SCAN = 1_000_000;
@@ -74,29 +75,52 @@ interface Found {
 
 const idLabel = (id: string) => (id === "" ? "(no ID)" : id);
 
+const SCAN_CONCURRENCY = 8;
+const PREFIX_BYTES = 4096;
+
+/** The first bytes of a closed file; undefined when it cannot be read cheaply (non-file scheme). #BUG-0010 */
+async function readPrefix(uri: vscode.Uri): Promise<Uint8Array | undefined> {
+  if (uri.scheme !== "file") return undefined;
+  const fh = await fsOpen(uri.fsPath, "r");
+  try {
+    const buf = Buffer.alloc(PREFIX_BYTES);
+    const { bytesRead } = await fh.read(buf, 0, PREFIX_BYTES, 0);
+    return buf.subarray(0, bytesRead);
+  } finally {
+    await fh.close();
+  }
+}
+
+// #BUG-0010, #AVE-0010
 async function scanWorkspace(guard: GuardHandle): Promise<Found[]> {
-  // #BUG-0010: serial stat and full read per file, and textDocuments.find per URI; use a Map and bounded parallel reads.
   const exclude = excludeGlob(
     vscode.workspace.getConfiguration("files").get<Record<string, boolean>>("exclude", {}),
     vscode.workspace.getConfiguration("ansibleVault").get<string[]>("rekeyExclude", []),
   );
   const uris = await vscode.workspace.findFiles("**/*", exclude);
-  const found: Found[] = [];
-  for (const uri of uris) {
+  const openDocs = new Map(vscode.workspace.textDocuments.map((d) => [d.uri.toString(), d]));
+  const results = await mapLimit(uris, SCAN_CONCURRENCY, async (uri): Promise<Found | undefined> => {
     try {
-      const open = vscode.workspace.textDocuments.find((d) => d.uri.toString() === uri.toString());
+      const open = openDocs.get(uri.toString());
       const transparent = open ? guard.isTransparent(open) : false;
       const stat = await vscode.workspace.fs.stat(uri);
-      if (stat.size > MAX_SCAN) continue;
-      const text = open && !transparent ? open.getText() : await readDisk(uri);
-      if (!text.includes("$ANSIBLE_VAULT;")) continue;
+      if (stat.size > MAX_SCAN) return undefined;
+      let text: string;
+      if (open && !transparent) text = open.getText();
+      else {
+        const prefix = open ? undefined : await readPrefix(uri);
+        if (prefix && looksBinary(prefix)) return undefined;
+        text = await readDisk(uri);
+      }
+      if (!text.includes("$ANSIBLE_VAULT;")) return undefined;
       const entry = scanText(text);
-      if (entry) found.push({ uri, text, entry, open, transparent });
+      return entry ? { uri, text, entry, open, transparent } : undefined;
     } catch {
       // unreadable or binary: not ours
+      return undefined;
     }
-  }
-  return found;
+  });
+  return results.filter((f): f is Found => f !== undefined);
 }
 
 // #AVE-0010

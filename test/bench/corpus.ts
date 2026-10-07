@@ -45,6 +45,17 @@ export function yamlWithBlocks(
   return lines.join("\n") + "\n";
 }
 
+let freshCount = 0;
+
+/**
+ * YAML text that differs from every earlier call but parses the same: a unique trailing comment.
+ * `inlineTargets` memoizes the last text, so a bench that repeats one string times a cache hit.
+ * #BUG-0007, #AVE-0018
+ */
+export function fresh(text: string): string {
+  return `${text}\n# ${freshCount++}`;
+}
+
 /** Skips the cipher: isolates the text handling from PBKDF2. #AVE-0018 */
 export const stubDecrypt = async () => ({
   plaintext: Buffer.from("s3cret-value"),
@@ -85,7 +96,7 @@ export function suite(title: string, cases: Case[]): void {
       test(name, async ({ bench }) => {
         const dir = BASELINE ? "test/bench/baseline" : "build/bench";
         const opts = { ...DEFAULT, ...run };
-        const now = bench(name, { writeResult: `${dir}/${slug}` }, () => void fn());
+        const now = bench(name, { writeResult: `${dir}/${slug}` }, async () => void (await fn()));
         if (BASELINE || !existsSync(baseline)) await now.run(opts);
         else await bench.compare(now, bench.from(`${name} (baseline)`, baseline), opts);
       });

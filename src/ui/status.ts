@@ -41,7 +41,7 @@ export function registerStatus(context: vscode.ExtensionContext): void {
   };
 
   const update = () => {
-    // #BUG-0007: up to four full YAML parses per cursor move (describeDocument, findVaultBlocks, parseMarkers, plus the providers).
+    // #BUG-0007: describeDocument parses once and returns the blocks and markers reused below.
     const editor = vscode.window.activeTextEditor;
     if (!editor || editor.document.getText().length > MAX_SCAN) {
       item.hide();
@@ -65,12 +65,12 @@ export function registerStatus(context: vscode.ExtensionContext): void {
     editor.setDecorations(
       decoration,
       yaml && !state.fileIsVaulted
-        ? findVaultBlocks(text).map(
+        ? (state.blocks ?? findVaultBlocks(text)).map(
             (b) => new vscode.Range(doc.positionAt(b.start), doc.positionAt(b.end)),
           )
         : [],
     );
-    const markers = yaml ? parseMarkers(text) : { values: [] };
+    const markers = yaml ? (state.markers ?? parseMarkers(text)) : { values: [] };
     const ranges = markers.values.map(
       (m) => new vscode.Range(doc.positionAt(m.commentStart), doc.positionAt(m.commentEnd)),
     );

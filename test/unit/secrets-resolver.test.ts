@@ -297,3 +297,45 @@ describe("rekeyed secrets", () => {
     expect(resolver().hasSourceFor("prod")).toBe(false);
   });
 });
+
+// #BUG-0009, #AVE-0003
+describe("source read caching", () => {
+  const counter = () => {
+    file("count.sh", `#!/bin/sh\necho x >> "${join(root, "runs")}"\nprintf s3\n`, 0o700);
+    return () => readFileSync(join(root, "runs"), "utf8").split("\n").filter(Boolean).length;
+  };
+
+  it("runs a password script once across many candidates() and labels() calls", async () => {
+    const runs = counter();
+    const r = resolver({ passwordFile: "count.sh" });
+    for (let i = 0; i < 50; i++) {
+      expect(await r.candidates("default")).toEqual(["s3"]);
+      await r.labels();
+    }
+    expect(runs()).toBe(1);
+  });
+
+  it("invalidate() makes the next lookup run the script again", async () => {
+    const runs = counter();
+    const r = resolver({ passwordFile: "count.sh" });
+    await r.candidates("default");
+    r.invalidate();
+    await r.candidates("default");
+    expect(runs()).toBe(2);
+  });
+
+  it("a failing source is reported once, not per call", async () => {
+    file("bad.sh", "#!/bin/sh\nexit 1\n", 0o700);
+    const r = resolver({ passwordFile: "bad.sh" });
+    await r.candidates("a");
+    await r.candidates("b");
+    expect(reports.length).toBe(1);
+  });
+
+  it("concurrent lookups share one read", async () => {
+    const runs = counter();
+    const r = resolver({ passwordFile: "count.sh" });
+    await Promise.all(Array.from({ length: 20 }, () => r.candidates("default")));
+    expect(runs()).toBe(1);
+  });
+});

@@ -173,3 +173,32 @@ describe("locating scalars", () => {
     expect(inlineTargets("a: [unclosed\n").ok).toBe(false);
   });
 });
+
+// #AVE-0006, #BUG-0006
+describe("duplicate keys and large maps", () => {
+  it("still yields targets and ok for a duplicate key", () => {
+    const { targets, ok } = inlineTargets("a: 1\nb: 2\na: 3\n");
+    expect(ok).toBe(true);
+    expect(targets.filter((t) => t.path === "a").map((t) => t.value)).toEqual(["1", "3"]);
+  });
+
+  it("is still not ok for a syntax error", () => {
+    expect(inlineTargets("a: [1\nb: 2\n").ok).toBe(false);
+  });
+
+  it("is roughly linear on a large flat map", () => {
+    const make = (n: number) => Array.from({ length: n }, (_, i) => `key${i}: value${i}\n`).join("");
+    const time = (n: number) => {
+      const t = make(n);
+      const s = performance.now();
+      inlineTargets(t);
+      return performance.now() - s;
+    };
+    time(1000);
+    const small = Math.max(time(4000), 1);
+    const big = time(16000);
+    // quadratic would be ~16x; allow generous slack for noise
+    expect(big).toBeLessThan(small * 10);
+    expect(big).toBeLessThan(1500);
+  });
+});

@@ -9,18 +9,20 @@ export interface FindCfgOptions {
   exists: (path: string) => boolean;
 }
 
-// #AVE-0003
-export function findAnsibleCfg(o: FindCfgOptions): string | undefined {
-  const candidates = [
+/** The places Ansible looks for ansible.cfg, in order. */
+// #AVE-0003, #BUG-0008
+export function ansibleCfgCandidates(o: Omit<FindCfgOptions, "exists">): string[] {
+  return [
     o.env.ANSIBLE_CONFIG,
     o.workspaceRoot && join(o.workspaceRoot, "ansible.cfg"),
     join(o.home, ".ansible.cfg"),
     "/etc/ansible/ansible.cfg",
-  ];
-  for (const c of candidates) {
-    if (c && o.exists(c)) return c;
-  }
-  return undefined;
+  ].filter((c): c is string => typeof c === "string" && c !== "");
+}
+
+// #AVE-0003
+export function findAnsibleCfg(o: FindCfgOptions): string | undefined {
+  return ansibleCfgCandidates(o).find((c) => o.exists(c));
 }
 
 export type Ini = Record<string, Record<string, string>>;

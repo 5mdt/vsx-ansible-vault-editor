@@ -12,7 +12,7 @@ export function registerCodeActions(context: vscode.ExtensionContext): void {
       YAML_SELECTOR,
       {
         provideCodeActions(doc, range) {
-          // #BUG-0007: scalarAt parses the whole document again on every lightbulb request.
+          // #BUG-0007: scalarAt reuses the memoized parse.
           const text = doc.getText();
           if (fileVaultId(text)) return [];
           const target = scalarAt(text, doc.offsetAt(range.start));

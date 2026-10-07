@@ -2,6 +2,7 @@ import { rekeyMany, rekeyText, type RekeyDeps } from "../../src/rekey/rekey";
 import type { VaultBackend } from "../../src/vault/backend";
 import {
   SLOW,
+  fresh,
   nativeBackend,
   nativeDecrypt,
   stubDecrypt,
@@ -26,14 +27,34 @@ suite("rekeyText", [
   ["vaulted file", () => rekeyText(file, target, real), SLOW],
   ...[1, 10, 50].map((n): [string, () => unknown, typeof SLOW] => {
     const text = yamlWithBlocks(n * 10, n);
-    return [`${n} blocks`, () => rekeyText(text, target, real), SLOW];
+    return [`${n} blocks`, () => rekeyText(fresh(text), target, real), SLOW];
   }),
-  ["50 blocks, stub crypto", () => rekeyText(many, target, stub)],
+  ["50 blocks, stub crypto", () => rekeyText(fresh(many), target, stub)],
 ]);
 
-const files = Array.from({ length: 20 }, (_, i) => ({ id: `f${i}`, text: yamlWithBlocks(100, 5) }));
+const files = Array.from({ length: 20 }, (_, i) => ({
+  id: `f${i}`,
+  text: yamlWithBlocks(100, 5),
+}));
 // #AVE-0010, #AVE-0018
 suite("rekeyMany", [
-  ["20 files x 5 blocks, stub crypto", () => rekeyMany(files, target, stub)],
-  ["20 files x 5 blocks", () => rekeyMany(files, target, real), SLOW],
+  [
+    "20 files x 5 blocks, stub crypto",
+    () =>
+      rekeyMany(
+        files.map((f) => ({ ...f, text: fresh(f.text) })),
+        target,
+        stub,
+      ),
+  ],
+  [
+    "20 files x 5 blocks",
+    () =>
+      rekeyMany(
+        files.map((f) => ({ ...f, text: fresh(f.text) })),
+        target,
+        real,
+      ),
+    SLOW,
+  ],
 ]);

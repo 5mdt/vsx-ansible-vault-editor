@@ -2,13 +2,14 @@ import { describeDocument, fileVaultId, findVaultBlocks } from "../../src/detect
 import { inlineTargets, plainScalars } from "../../src/inline/yaml-values";
 import { scanText } from "../../src/rekey/scan";
 import { parseMarkers } from "../../src/transparent/markers";
-import { suite, vaultFile, yamlWithBlocks } from "./corpus";
+import { fresh, suite, vaultFile, yamlWithBlocks } from "./corpus";
 
-// keys, blocks. Larger files are impractical: the parsing here grows quadratically with size.
+// keys, blocks.
 const sizes: [string, number, number][] = [
   ["100 lines", 80, 4],
   ["1k lines", 1000, 10],
   ["4k lines", 4000, 40],
+  ["16k lines", 16000, 160],
 ];
 
 for (const [label, keys, blocks] of sizes) {
@@ -16,12 +17,14 @@ for (const [label, keys, blocks] of sizes) {
   const mid = Math.floor(text.length / 2);
   // #AVE-0012, #AVE-0006, #AVE-0013, #AVE-0018
   suite(`detection, ${label}`, [
-    ["describeDocument", () => describeDocument(text, mid)],
-    ["findVaultBlocks", () => findVaultBlocks(text)],
-    ["inlineTargets", () => inlineTargets(text)],
-    ["plainScalars", () => plainScalars(text)],
-    ["parseMarkers", () => parseMarkers(text)],
-    ["scanText", () => scanText(text)],
+    ["describeDocument", () => describeDocument(fresh(text), mid)],
+    ["findVaultBlocks", () => findVaultBlocks(fresh(text))],
+    ["inlineTargets", () => inlineTargets(fresh(text))],
+    ["plainScalars", () => plainScalars(fresh(text))],
+    ["parseMarkers", () => parseMarkers(fresh(text))],
+    ["scanText", () => scanText(fresh(text))],
+    // #BUG-0007: a cursor move on unchanged text; target is under 20 ms at 4k lines.
+    ["describeDocument, cursor move (same text)", () => describeDocument(text, mid)],
   ]);
 }
 
