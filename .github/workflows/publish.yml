@@ -29,7 +29,11 @@ jobs:
       - run: AVE_REQUIRE_ANSIBLE=1 npm run test:integration
       - run: make package
       - name: Attach the vsix to the GitHub release
-        run: gh release create "$GITHUB_REF_NAME" build/ansible-vault-editor.vsix --title "$GITHUB_REF_NAME" --generate-notes
+        run: |
+          # Notes are the tag's docs/CHANGELOG.md section; --generate-notes would list only merged PRs (Dependabot's), since work lands on main directly.
+          awk -v t="## $GITHUB_REF_NAME " 'index($0, "## ") == 1 { on = (index($0, t) == 1); next } on' docs/CHANGELOG.md > build/release-notes.md
+          [ -s build/release-notes.md ] || { echo "::error::no $GITHUB_REF_NAME section in docs/CHANGELOG.md"; exit 1; }
+          gh release create "$GITHUB_REF_NAME" build/ansible-vault-editor.vsix --title "$GITHUB_REF_NAME" --notes-file build/release-notes.md
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Publish to the Visual Studio Marketplace
